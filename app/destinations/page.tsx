@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
 
 type HeroSlide = {
   location: string;
@@ -147,12 +145,11 @@ const adventures = [
 export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeSearch, setActiveSearch] = useState("Hotels");
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setActiveSlide(
-        (current) => (current + 1) % heroSlides.length
-      );
+      setActiveSlide((current) => (current + 1) % heroSlides.length);
     }, 6000);
 
     return () => window.clearInterval(timer);
@@ -160,42 +157,111 @@ export default function Home() {
 
   const previousSlide = () => {
     setActiveSlide(
-      (current) =>
-        (current - 1 + heroSlides.length) %
-        heroSlides.length
+      (current) => (current - 1 + heroSlides.length) % heroSlides.length,
     );
   };
 
   const nextSlide = () => {
-    setActiveSlide(
-      (current) => (current + 1) % heroSlides.length
-    );
+    setActiveSlide((current) => (current + 1) % heroSlides.length);
   };
 
   const slide = heroSlides[activeSlide];
 
   return (
     <main className="site-shell">
-
       {/* =====================================================
-          GLOBAL HEADER
+          HEADER
       ===================================================== */}
 
-      <Header variant="transparent" />
+      <header className="site-header">
+        <div className="header-inner">
+          <a href="/" className="brand" aria-label="Hikinhigh Travels Home">
+            <span className="brand-mark">H</span>
+
+            <span className="brand-copy">
+              <strong>hikinhigh</strong>
+              <small>travels</small>
+            </span>
+          </a>
+
+          <nav className="desktop-nav">
+            <a href="/destinations">Destinations</a>
+            <a href="/hotels">Hotels</a>
+            <a href="/packages">Packages</a>
+            <a href="/adventures">Adventures</a>
+            <a href="/about">About</a>
+          </nav>
+
+          <div className="header-actions">
+            <a href="/login" className="login-link">
+              Login
+            </a>
+
+            <a href="/register" className="header-button">
+              Join us
+            </a>
+          </div>
+
+          <button
+            type="button"
+            className="mobile-menu-button"
+            onClick={() => setMobileMenu((value) => !value)}
+            aria-label="Open navigation"
+            aria-expanded={mobileMenu}
+          >
+            {mobileMenu ? "×" : "☰"}
+          </button>
+        </div>
+
+        {mobileMenu && (
+          <div className="mobile-menu">
+            <a href="/destinations" onClick={() => setMobileMenu(false)}>
+              Destinations
+            </a>
+
+            <a href="/hotels" onClick={() => setMobileMenu(false)}>
+              Hotels
+            </a>
+
+            <a href="/packages" onClick={() => setMobileMenu(false)}>
+              Packages
+            </a>
+
+            <a href="/adventures" onClick={() => setMobileMenu(false)}>
+              Adventures
+            </a>
+
+            <a href="/about" onClick={() => setMobileMenu(false)}>
+              About
+            </a>
+
+            <div className="mobile-menu-divider" />
+
+            <a href="/login" onClick={() => setMobileMenu(false)}>
+              Login
+            </a>
+
+            <a
+              href="/register"
+              className="mobile-join"
+              onClick={() => setMobileMenu(false)}
+            >
+              Join Hikinhigh
+            </a>
+          </div>
+        )}
+      </header>
 
       {/* =====================================================
           HERO
       ===================================================== */}
 
       <section className="hero">
-
         {heroSlides.map((item, index) => (
           <div
             key={item.location}
             className={`hero-slide ${
-              index === activeSlide
-                ? "hero-slide-active"
-                : ""
+              index === activeSlide ? "hero-slide-active" : ""
             }`}
           >
             <img
@@ -207,15 +273,10 @@ export default function Home() {
         ))}
 
         <div className="hero-overlay" />
-
         <div className="hero-bottom-gradient" />
 
         <div className="hero-content">
-
-          <div
-            className="hero-copy"
-            key={activeSlide}
-          >
+          <div className="hero-copy" key={activeSlide}>
             <div className="hero-location">
               <span />
               {slide.location}
@@ -226,35 +287,21 @@ export default function Home() {
               <em>{slide.accent}</em>
             </h1>
 
-            <p>
-              {slide.description}
-            </p>
+            <p>{slide.description}</p>
 
             <div className="hero-buttons">
-
-              <a
-                href="/packages"
-                className="primary-button"
-              >
+              <a href="/packages" className="primary-button">
                 Explore journeys
               </a>
 
-              <a
-                href="/adventures"
-                className="secondary-button"
-              >
+              <a href="/adventures" className="secondary-button">
                 Discover experiences
               </a>
-
             </div>
           </div>
-
         </div>
 
-        {/* SLIDER CONTROLS */}
-
         <div className="slider-controls">
-
           <button
             type="button"
             onClick={previousSlide}
@@ -264,55 +311,26 @@ export default function Home() {
           </button>
 
           <div className="slide-number">
-            <strong>
-              {String(activeSlide + 1).padStart(
-                2,
-                "0"
-              )}
-            </strong>
-
+            <strong>{String(activeSlide + 1).padStart(2, "0")}</strong>
             <span>/</span>
-
-            <span>
-              {String(heroSlides.length).padStart(
-                2,
-                "0"
-              )}
-            </span>
+            <span>{String(heroSlides.length).padStart(2, "0")}</span>
           </div>
 
-          <button
-            type="button"
-            onClick={nextSlide}
-            aria-label="Next slide"
-          >
+          <button type="button" onClick={nextSlide} aria-label="Next slide">
             →
           </button>
-
         </div>
 
-        {/* SLIDE PROGRESS */}
-
         <div className="slide-progress">
-
           {heroSlides.map((item, index) => (
             <button
               key={item.location}
               type="button"
-              className={
-                index === activeSlide
-                  ? "progress-active"
-                  : ""
-              }
-              onClick={() =>
-                setActiveSlide(index)
-              }
-              aria-label={`Go to slide ${
-                index + 1
-              }`}
+              className={index === activeSlide ? "progress-active" : ""}
+              onClick={() => setActiveSlide(index)}
+              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
-
         </div>
 
         {/* ===================================================
@@ -320,55 +338,31 @@ export default function Home() {
         =================================================== */}
 
         <div className="booking-wrapper">
-
           <div className="booking-box">
-
             <div className="booking-tabs">
-
-              {[
-                "Hotels",
-                "Tour Packages",
-                "Adventures",
-              ].map((item) => (
+              {["Hotels", "Tour Packages", "Adventures"].map((item) => (
                 <button
                   key={item}
                   type="button"
-                  className={
-                    activeSearch === item
-                      ? "tab-active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setActiveSearch(item)
-                  }
+                  className={activeSearch === item ? "tab-active" : ""}
+                  onClick={() => setActiveSearch(item)}
                 >
                   {item}
                 </button>
               ))}
-
             </div>
 
             <div className="booking-fields">
-
               <BookingField
                 label="Destination"
                 value="Where are you going?"
               />
 
-              <BookingField
-                label="Check in"
-                value="Add dates"
-              />
+              <BookingField label="Check in" value="Add dates" />
 
-              <BookingField
-                label="Check out"
-                value="Add dates"
-              />
+              <BookingField label="Check out" value="Add dates" />
 
-              <BookingField
-                label="Travellers"
-                value="2 Guests"
-              />
+              <BookingField label="Travellers" value="2 Guests" />
 
               <button
                 type="button"
@@ -376,9 +370,7 @@ export default function Home() {
                 onClick={() => {
                   if (activeSearch === "Hotels") {
                     window.location.href = "/hotels";
-                  } else if (
-                    activeSearch === "Tour Packages"
-                  ) {
+                  } else if (activeSearch === "Tour Packages") {
                     window.location.href = "/packages";
                   } else {
                     window.location.href = "/adventures";
@@ -387,56 +379,37 @@ export default function Home() {
               >
                 Search
               </button>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* =====================================================
           INTRO
       ===================================================== */}
 
-      <section
-        id="about"
-        className="intro-section"
-      >
+      <section id="about" className="intro-section">
         <div className="content-width intro-grid">
-
           <div>
-
-            <span className="eyebrow">
-              The Hikinhigh way
-            </span>
+            <span className="eyebrow">The Hikinhigh way</span>
 
             <h2>
               Travel should be about the
               <em> feeling.</em>
             </h2>
-
           </div>
 
           <div className="intro-text">
-
             <p>
-              From beautiful hotels and carefully planned
-              journeys to experiences that take you outside
-              your comfort zone, Hikinhigh brings the pieces
-              of your next escape together.
+              From beautiful hotels and carefully planned journeys to
+              experiences that take you outside your comfort zone, Hikinhigh
+              brings the pieces of your next escape together.
             </p>
 
-            <a
-              href="/about"
-              className="text-link"
-            >
+            <a href="/about" className="text-link">
               Discover Hikinhigh <span>→</span>
             </a>
-
           </div>
-
         </div>
       </section>
 
@@ -444,12 +417,8 @@ export default function Home() {
           DESTINATIONS
       ===================================================== */}
 
-      <section
-        id="destinations"
-        className="section"
-      >
+      <section id="destinations" className="section">
         <div className="content-width">
-
           <SectionHeading
             eyebrow="Destinations"
             title="Go somewhere worth remembering."
@@ -458,48 +427,28 @@ export default function Home() {
           />
 
           <div className="destination-grid">
+            {destinations.map((destination, index) => (
+              <a
+                href="/destinations"
+                key={destination.name}
+                className={`destination-card ${
+                  index % 2 === 1 ? "destination-offset" : ""
+                }`}
+              >
+                <img src={destination.image} alt={destination.name} />
 
-            {destinations.map(
-              (destination, index) => (
-                <a
-                  href="/destinations"
-                  key={destination.name}
-                  className={`destination-card ${
-                    index % 2 === 1
-                      ? "destination-offset"
-                      : ""
-                  }`}
-                >
+                <div className="destination-overlay" />
 
-                  <img
-                    src={destination.image}
-                    alt={destination.name}
-                  />
+                <div className="destination-content">
+                  <span>{destination.country}</span>
 
-                  <div className="destination-overlay" />
+                  <h3>{destination.name}</h3>
 
-                  <div className="destination-content">
-
-                    <span>
-                      {destination.country}
-                    </span>
-
-                    <h3>
-                      {destination.name}
-                    </h3>
-
-                    <div className="destination-arrow">
-                      ↗
-                    </div>
-
-                  </div>
-
-                </a>
-              )
-            )}
-
+                  <div className="destination-arrow">↗</div>
+                </div>
+              </a>
+            ))}
           </div>
-
         </div>
       </section>
 
@@ -507,12 +456,8 @@ export default function Home() {
           SERVICES
       ===================================================== */}
 
-      <section
-        id="hotels"
-        className="dark-section"
-      >
+      <section id="hotels" className="dark-section">
         <div className="content-width">
-
           <SectionHeading
             dark
             eyebrow="Everything in one place"
@@ -520,7 +465,6 @@ export default function Home() {
           />
 
           <div className="service-grid">
-
             {services.map((service) => (
               <ServiceCard
                 key={service.title}
@@ -531,9 +475,7 @@ export default function Home() {
                 href={service.href}
               />
             ))}
-
           </div>
-
         </div>
       </section>
 
@@ -541,12 +483,8 @@ export default function Home() {
           PACKAGES
       ===================================================== */}
 
-      <section
-        id="packages"
-        className="section package-section"
-      >
+      <section id="packages" className="section package-section">
         <div className="content-width">
-
           <SectionHeading
             eyebrow="Curated journeys"
             title="Trips made for the way you want to travel."
@@ -555,83 +493,47 @@ export default function Home() {
           />
 
           <div className="home-package-grid">
-
             {packages.map((pkg, index) => (
               <a
                 href="/packages"
                 key={pkg.title}
                 className={`home-package-card ${
-                  index === 0
-                    ? "home-package-card-featured"
-                    : ""
+                  index === 0 ? "home-package-card-featured" : ""
                 }`}
                 aria-label={`View ${pkg.title}`}
               >
-
                 <div className="home-package-image">
-
-                  <img
-                    src={pkg.image}
-                    alt={pkg.title}
-                  />
+                  <img src={pkg.image} alt={pkg.title} />
 
                   <span className="home-package-label">
-                    {index === 0
-                      ? "Featured journey"
-                      : pkg.location.split(" · ")[0]}
+                    {index === 0 ? "Featured journey" : pkg.location.split(" · ")[0]}
                   </span>
 
                   <div className="home-package-image-bottom">
+                    <span>{pkg.location}</span>
 
-                    <span>
-                      {pkg.location}
-                    </span>
-
-                    <h3>
-                      {pkg.title}
-                    </h3>
-
+                    <h3>{pkg.title}</h3>
                   </div>
-
                 </div>
 
                 <div className="home-package-details">
-
                   <div className="home-package-duration">
-
-                    <span className="home-package-meta-label">
-                      Duration
-                    </span>
-
-                    <strong>
-                      {pkg.duration}
-                    </strong>
-
+                    <span className="home-package-meta-label">Duration</span>
+                    <strong>{pkg.duration}</strong>
                   </div>
 
                   <div className="home-package-price">
-
-                    <span className="home-package-meta-label">
-                      Starting from
-                    </span>
-
-                    <strong>
-                      {pkg.price}
-                    </strong>
-
+                    <span className="home-package-meta-label">Starting from</span>
+                    <strong>{pkg.price}</strong>
                   </div>
 
                   <span className="home-package-view">
                     View journey <span>↗</span>
                   </span>
-
                 </div>
-
               </a>
             ))}
-
           </div>
-
         </div>
       </section>
 
@@ -639,16 +541,10 @@ export default function Home() {
           ADVENTURES
       ===================================================== */}
 
-      <section
-        id="adventures"
-        className="adventure-section"
-      >
+      <section id="adventures" className="adventure-section">
         <div className="content-width">
-
           <div className="adventure-heading">
-
             <div>
-
               <span className="eyebrow eyebrow-light">
                 Adventure collection
               </span>
@@ -657,53 +553,35 @@ export default function Home() {
                 Leave room for a
                 <em> little wild.</em>
               </h2>
-
             </div>
 
             <p>
-              Add something unforgettable to your itinerary
-              with experiences designed for curious travellers.
+              Add something unforgettable to your itinerary with experiences
+              designed for curious travellers.
             </p>
-
           </div>
 
           <div className="adventure-grid">
-
             {adventures.map((adventure) => (
               <a
                 href="/adventures"
                 key={adventure.title}
                 className="adventure-card"
               >
-
-                <img
-                  src={adventure.image}
-                  alt={adventure.title}
-                />
+                <img src={adventure.image} alt={adventure.title} />
 
                 <div className="adventure-overlay" />
 
                 <div className="adventure-content">
+                  <span>{adventure.category}</span>
 
-                  <span>
-                    {adventure.category}
-                  </span>
+                  <h3>{adventure.title}</h3>
 
-                  <h3>
-                    {adventure.title}
-                  </h3>
-
-                  <div>
-                    Explore →
-                  </div>
-
+                  <div>Explore →</div>
                 </div>
-
               </a>
             ))}
-
           </div>
-
         </div>
       </section>
 
@@ -712,14 +590,9 @@ export default function Home() {
       ===================================================== */}
 
       <section className="section">
-
         <div className="content-width why-grid">
-
           <div>
-
-            <span className="eyebrow">
-              Why Hikinhigh
-            </span>
+            <span className="eyebrow">Why Hikinhigh</span>
 
             <h2 className="large-heading">
               Less planning.
@@ -727,16 +600,13 @@ export default function Home() {
             </h2>
 
             <p className="why-description">
-              A travel platform built around the things that
-              actually matter: great places, straightforward
-              booking and experiences worth talking about
-              afterwards.
+              A travel platform built around the things that actually matter:
+              great places, straightforward booking and experiences worth
+              talking about afterwards.
             </p>
-
           </div>
 
           <div className="benefit-grid">
-
             <Benefit
               number="01"
               title="Curated"
@@ -760,11 +630,8 @@ export default function Home() {
               title="Supported"
               text="Get assistance before and during your journey when you need it."
             />
-
           </div>
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -772,23 +639,14 @@ export default function Home() {
       ===================================================== */}
 
       <section className="cta-section">
-
         <div className="cta-image">
-
-          <img
-            src="/images/cta-travel.jpg"
-            alt="Travel landscape"
-          />
-
+          <img src="/images/cta-travel.jpg" alt="Travel landscape" />
         </div>
 
         <div className="cta-overlay" />
 
         <div className="cta-content">
-
-          <span>
-            YOUR NEXT JOURNEY
-          </span>
+          <span>YOUR NEXT JOURNEY</span>
 
           <h2>
             Somewhere
@@ -796,34 +654,96 @@ export default function Home() {
           </h2>
 
           <p>
-            Create your account and start discovering hotels,
-            journeys and adventures.
+            Create your account and start discovering hotels, journeys and
+            adventures.
           </p>
 
-          <a
-            href="/register"
-            className="primary-button"
-          >
+          <a href="/register" className="primary-button">
             Start exploring
           </a>
-
         </div>
-
       </section>
 
       {/* =====================================================
-          GLOBAL FOOTER
+          FOOTER
       ===================================================== */}
 
-      <Footer />
+      <footer className="footer">
+        <div className="content-width">
+          <div className="footer-grid">
+            <div className="footer-brand">
+              <a href="/" className="brand brand-footer">
+                <span className="brand-mark">H</span>
 
+                <span className="brand-copy">
+                  <strong>hikinhigh</strong>
+                  <small>travels</small>
+                </span>
+              </a>
+
+              <p>
+                Beautiful stays, unforgettable journeys and experiences worth
+                travelling for.
+              </p>
+            </div>
+
+            <FooterColumn
+              title="Explore"
+              links={[
+                ["Destinations", "/destinations"],
+                ["Hotels", "/hotels"],
+                ["Tour Packages", "/packages"],
+                ["Adventures", "/adventures"],
+              ]}
+            />
+
+            <FooterColumn
+              title="Company"
+              links={[
+                ["About Us", "/about"],
+                ["Contact", "/contact"],
+                ["Privacy Policy", "/privacy-policy"],
+                ["Terms & Conditions", "/terms-conditions"],
+              ]}
+            />
+
+            <div>
+              <h4>Contact</h4>
+
+              <p className="footer-contact">
+                hello@hikinhightravels.com
+              </p>
+
+              <p className="footer-contact">
+                +91 00000 00000
+              </p>
+
+              <div className="social-links">
+                <a href="#" aria-label="Instagram">
+                  IG
+                </a>
+
+                <a href="#" aria-label="Facebook">
+                  FB
+                </a>
+
+                <a href="#" aria-label="LinkedIn">
+                  IN
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-bottom">
+            <span>© {new Date().getFullYear()} Hikinhigh Travels</span>
+
+            <span>Travel further. Experience more.</span>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
-
-/* ============================================================
-   BOOKING FIELD
-============================================================ */
 
 function BookingField({
   label,
@@ -833,20 +753,12 @@ function BookingField({
   value: string;
 }) {
   return (
-    <button
-      type="button"
-      className="booking-field"
-    >
+    <button type="button" className="booking-field">
       <span>{label}</span>
-
       <strong>{value}</strong>
     </button>
   );
 }
-
-/* ============================================================
-   SECTION HEADING
-============================================================ */
 
 function SectionHeading({
   eyebrow,
@@ -864,40 +776,23 @@ function SectionHeading({
   return (
     <div
       className={`section-heading ${
-        dark
-          ? "section-heading-dark"
-          : ""
+        dark ? "section-heading-dark" : ""
       }`}
     >
-
       <div>
+        <span className="eyebrow">{eyebrow}</span>
 
-        <span className="eyebrow">
-          {eyebrow}
-        </span>
-
-        <h2>
-          {title}
-        </h2>
-
+        <h2>{title}</h2>
       </div>
 
       {action && actionHref && (
-        <a
-          href={actionHref}
-          className="heading-action"
-        >
+        <a href={actionHref} className="heading-action">
           {action} <span>→</span>
         </a>
       )}
-
     </div>
   );
 }
-
-/* ============================================================
-   SERVICE CARD
-============================================================ */
 
 function ServiceCard({
   number,
@@ -913,55 +808,31 @@ function ServiceCard({
   href: string;
 }) {
   return (
-    <a
-      href={href}
-      className="service-card"
-    >
-
-      <img
-        src={image}
-        alt={title}
-      />
+    <a href={href} className="service-card">
+      <img src={image} alt={title} />
 
       <div className="service-image-overlay" />
 
       <div className="service-top">
+        <span className="service-number">{number}</span>
 
-        <span className="service-number">
-          {number}
-        </span>
-
-        <span className="service-arrow">
-          ↗
-        </span>
-
+        <span className="service-arrow">↗</span>
       </div>
 
       <div className="service-content">
+        <h3>{title}</h3>
 
-        <h3>
-          {title}
-        </h3>
-
-        <p>
-          {text}
-        </p>
+        <p>{text}</p>
 
         <div className="service-line" />
 
         <span className="service-link">
           Explore {title} →
         </span>
-
       </div>
-
     </a>
   );
 }
-
-/* ============================================================
-   BENEFIT
-============================================================ */
 
 function Benefit({
   number,
@@ -974,19 +845,33 @@ function Benefit({
 }) {
   return (
     <div className="benefit">
+      <span>{number}</span>
 
-      <span>
-        {number}
-      </span>
+      <h3>{title}</h3>
 
-      <h3>
-        {title}
-      </h3>
+      <p>{text}</p>
+    </div>
+  );
+}
 
-      <p>
-        {text}
-      </p>
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: string[][];
+}) {
+  return (
+    <div>
+      <h4>{title}</h4>
 
+      <div className="footer-links">
+        {links.map(([label, href]) => (
+          <a href={href} key={label}>
+            {label}
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
