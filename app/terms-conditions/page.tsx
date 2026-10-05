@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./terms-conditions.module.css";
 
 const sections = [
   {
@@ -241,10 +242,11 @@ const sections = [
           website.
         </p>
 
-        <div className="hht-contact-box">
-          <strong>Hikinhigh</strong>
-          <span>info@hikinhigh.com</span>
-          <span>+91 999-060-1105</span>
+        <div className={styles.contactBox}>
+          <strong>Hikinhigh Travels</strong>
+          <span>Connect@hikinhigh.com</span>
+          <span>+91 813 006 9469</span>
+          <span>Gurugram, Haryana, India</span>
         </div>
       </>
     ),
@@ -253,1273 +255,162 @@ const sections = [
 
 export default function TermsConditionsPage() {
   return (
-    <main className="hht-page">
-      <style>{`
-        /* =========================================================
-           HIKINHIGH TERMS & CONDITIONS
-           COMPLETE SELF-CONTAINED DESIGN
-        ========================================================= */
-
-        .hht-page {
-          --cream: #f4f1e9;
-          --green: #103d31;
-          --deep-green: #082c23;
-          --gold: #d0a95d;
-          --text: #596760;
-          --line: rgba(16, 61, 49, 0.15);
-
-          min-height: 100vh;
-          width: 100%;
-          margin: 0;
-          padding: 0;
-
-          background: var(--cream);
-          color: var(--green);
-
-          overflow-x: hidden;
-
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
-        }
-
-        .hht-page *,
-        .hht-page *::before,
-        .hht-page *::after {
-          box-sizing: border-box;
-        }
-
-        .hht-page a {
-          color: inherit;
-        }
-
-        /* =========================================================
-           HERO
-        ========================================================= */
-
-        .hht-hero {
-          position: relative;
-
-          min-height: 720px;
-
-          background-image:
-            linear-gradient(
-              90deg,
-              rgba(7, 25, 21, 0.72) 0%,
-              rgba(7, 25, 21, 0.42) 48%,
-              rgba(7, 25, 21, 0.18) 100%
-            ),
-            url("/images/hero-kashmir.jpg");
-
-          background-size: cover;
-          background-position: center;
-
-          color: #ffffff;
-
-          overflow: hidden;
-        }
-
-        .hht-hero::after {
-          content: "";
-
-          position: absolute;
-          inset: 0;
-
-          background:
-            linear-gradient(
-              180deg,
-              rgba(0, 0, 0, 0.18) 0%,
-              transparent 28%,
-              rgba(0, 0, 0, 0.12) 100%
-            );
-
-          pointer-events: none;
-        }
-
-        /* =========================================================
-           HEADER — SAME AS PRIVACY PAGE / HOMEPAGE STYLE
-        ========================================================= */
-
-        .hht-header {
-          position: absolute;
-          z-index: 20;
-
-          top: 0;
-          left: 0;
-
-          width: 100%;
-          height: 108px;
-
-          background: transparent;
-
-          color: #ffffff;
-        }
-
-        .hht-header-inner {
-          width: 100%;
-          height: 100%;
-
-          padding: 0 50px;
-
-          display: grid;
-          grid-template-columns: 300px 1fr 300px;
-          align-items: center;
-        }
-
-        /* =========================================================
-           LOGO
-        ========================================================= */
-
-        .hht-brand {
-          display: inline-flex;
-          align-items: center;
-          gap: 15px;
-
-          width: fit-content;
-
-          color: #ffffff;
-          text-decoration: none;
-        }
-
-        .hht-brand-mark {
-          width: 49px;
-          height: 49px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          border: 1px solid rgba(255,255,255,0.55);
-          border-radius: 50%;
-
-          color: #ffffff;
-
-          font-size: 20px;
-          font-weight: 800;
-
-          line-height: 1;
-        }
-
-        .hht-brand-copy {
-          display: flex;
-          flex-direction: column;
-
-          line-height: 1;
-        }
-
-        .hht-brand-copy strong {
-          color: #ffffff;
-
-          font-size: 23px;
-          font-weight: 800;
-
-          letter-spacing: -0.04em;
-        }
-
-        .hht-brand-copy small {
-          margin-top: 7px;
-
-          color: rgba(255,255,255,0.72);
-
-          font-size: 8px;
-          font-weight: 700;
-
-          letter-spacing: 0.38em;
-
-          text-transform: uppercase;
-        }
-
-        /* =========================================================
-           NAV
-        ========================================================= */
-
-        .hht-nav {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          gap: 40px;
-        }
-
-        .hht-nav a {
-          position: relative;
-
-          color: rgba(255,255,255,0.92);
-
-          text-decoration: none;
-
-          font-size: 14px;
-          font-weight: 650;
-
-          transition:
-            color 0.2s ease,
-            opacity 0.2s ease;
-        }
-
-        .hht-nav a::after {
-          content: "";
-
-          position: absolute;
-
-          left: 0;
-          bottom: -8px;
-
-          width: 0;
-          height: 1px;
-
-          background: #ffffff;
-
-          transition: width 0.25s ease;
-        }
-
-        .hht-nav a:hover {
-          color: #ffffff;
-        }
-
-        .hht-nav a:hover::after {
-          width: 100%;
-        }
-
-        /* =========================================================
-           ACTIONS
-        ========================================================= */
-
-        .hht-actions {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-
-          gap: 25px;
-        }
-
-        .hht-login {
-          color: #ffffff;
-
-          text-decoration: none;
-
-          font-size: 14px;
-          font-weight: 700;
-
-          transition: opacity 0.2s ease;
-        }
-
-        .hht-login:hover {
-          opacity: 0.65;
-        }
-
-        .hht-join {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-
-          min-width: 126px;
-          height: 58px;
-
-          padding: 0 25px;
-
-          background: var(--green);
-          border: 1px solid var(--green);
-
-          color: #ffffff !important;
-
-          text-decoration: none;
-
-          font-size: 12px;
-          font-weight: 800;
-
-          letter-spacing: 0.04em;
-
-          transition:
-            background 0.2s ease,
-            color 0.2s ease,
-            transform 0.2s ease;
-        }
-
-        .hht-join:hover {
-          background: #ffffff;
-          color: var(--green) !important;
-
-          transform: translateY(-2px);
-        }
-
-        /* =========================================================
-           HERO CONTENT
-        ========================================================= */
-
-        .hht-hero-content {
-          position: relative;
-          z-index: 5;
-
-          width: min(100% - 160px, 1520px);
-
-          min-height: 720px;
-
-          margin: 0 auto;
-
-          padding-top: 265px;
-
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-        }
-
-        .hht-eyebrow {
-          display: inline-flex;
-          align-items: center;
-
-          gap: 13px;
-
-          width: fit-content;
-
-          color: #ffffff;
-
-          font-size: 11px;
-          font-weight: 800;
-
-          letter-spacing: 0.25em;
-
-          text-transform: uppercase;
-        }
-
-        .hht-eyebrow::before {
-          content: "";
-
-          width: 35px;
-          height: 1px;
-
-          background: var(--gold);
-        }
-
-        .hht-hero h1 {
-          max-width: 950px;
-
-          margin: 27px 0 0;
-
-          color: #ffffff;
-
-          font-size: clamp(68px, 7.6vw, 126px);
-
-          font-weight: 800;
-
-          line-height: 0.82;
-
-          letter-spacing: -0.075em;
-        }
-
-        .hht-hero h1 em {
-          display: block;
-
-          font-family:
-            Georgia,
-            "Times New Roman",
-            serif;
-
-          font-size: 1.03em;
-
-          font-weight: 400;
-
-          font-style: italic;
-
-          letter-spacing: -0.065em;
-        }
-
-        .hht-hero-description {
-          max-width: 700px;
-
-          margin: 42px 0 0;
-
-          color: rgba(255,255,255,0.78);
-
-          font-size: 16px;
-
-          line-height: 1.8;
-        }
-
-        .hht-hero-meta {
-          display: flex;
-
-          gap: 30px;
-
-          margin-top: 45px;
-
-          color: rgba(255,255,255,0.62);
-
-          font-size: 10px;
-          font-weight: 700;
-
-          letter-spacing: 0.16em;
-
-          text-transform: uppercase;
-        }
-
-        /* =========================================================
-           CONTENT
-        ========================================================= */
-
-        .hht-content {
-          width: min(1180px, calc(100% - 48px));
-
-          margin: 0 auto;
-
-          padding: 120px 0 145px;
-        }
-
-        .hht-content-grid {
-          display: grid;
-
-          grid-template-columns: 220px minmax(0, 760px);
-
-          justify-content: space-between;
-
-          gap: 80px;
-        }
-
-        .hht-sidebar {
-          position: sticky;
-
-          top: 35px;
-
-          align-self: start;
-        }
-
-        .hht-sidebar-label {
-          display: block;
-
-          margin-bottom: 20px;
-
-          font-size: 10px;
-          font-weight: 800;
-
-          letter-spacing: 0.25em;
-
-          text-transform: uppercase;
-        }
-
-        .hht-sidebar a {
-          display: block;
-
-          padding: 10px 0;
-
-          color: #68746e;
-
-          border-bottom: 1px solid var(--line);
-
-          font-size: 12px;
-
-          line-height: 1.4;
-
-          text-decoration: none;
-
-          transition:
-            color 0.2s ease,
-            padding-left 0.2s ease;
-        }
-
-        .hht-sidebar a:hover {
-          padding-left: 5px;
-
-          color: var(--green);
-        }
-
-        .hht-section {
-          scroll-margin-top: 40px;
-
-          padding-bottom: 68px;
-
-          margin-bottom: 68px;
-
-          border-bottom: 1px solid var(--line);
-        }
-
-        .hht-section:last-child {
-          margin-bottom: 0;
-
-          border-bottom: 0;
-        }
-
-        .hht-section-heading {
-          display: grid;
-
-          grid-template-columns: 55px 1fr;
-
-          gap: 24px;
-        }
-
-        .hht-section-number {
-          padding-top: 8px;
-
-          color: var(--gold);
-
-          font-size: 11px;
-          font-weight: 800;
-
-          letter-spacing: 0.15em;
-        }
-
-        .hht-section h2 {
-          margin: 0;
-
-          font-size: clamp(34px, 4vw, 48px);
-
-          font-weight: 800;
-
-          line-height: 0.98;
-
-          letter-spacing: -0.045em;
-        }
-
-        .hht-section-copy {
-          margin-left: 79px;
-
-          margin-top: 28px;
-        }
-
-        .hht-section-copy p {
-          margin: 0 0 20px;
-
-          color: var(--text);
-
-          font-size: 15px;
-
-          line-height: 1.9;
-        }
-
-        .hht-section-copy p:last-child {
-          margin-bottom: 0;
-        }
-
-        .hht-contact-box {
-          display: flex;
-          flex-direction: column;
-
-          gap: 8px;
-
-          margin-top: 30px;
-
-          padding: 26px 28px;
-
-          background: rgba(16,61,49,0.055);
-
-          border-left: 2px solid var(--gold);
-
-          color: var(--green);
-
-          font-size: 14px;
-
-          line-height: 1.6;
-        }
-
-        .hht-contact-box strong {
-          font-size: 16px;
-        }
-
-        /* =========================================================
-           CTA
-        ========================================================= */
-
-        .hht-final {
-          background: var(--green);
-
-          color: #ffffff;
-        }
-
-        .hht-final-inner {
-          width: min(1180px, calc(100% - 48px));
-
-          min-height: 450px;
-
-          margin: 0 auto;
-
-          padding: 90px 0;
-
-          display: flex;
-
-          flex-direction: column;
-
-          justify-content: center;
-        }
-
-        .hht-final-label {
-          color: var(--gold);
-
-          font-size: 10px;
-          font-weight: 800;
-
-          letter-spacing: 0.3em;
-
-          text-transform: uppercase;
-        }
-
-        .hht-final h2 {
-          max-width: 700px;
-
-          margin: 25px 0 0;
-
-          color: #ffffff;
-
-          font-size: clamp(55px, 7vw, 94px);
-
-          font-weight: 800;
-
-          line-height: 0.9;
-
-          letter-spacing: -0.065em;
-        }
-
-        .hht-final h2 em {
-          font-family:
-            Georgia,
-            "Times New Roman",
-            serif;
-
-          font-weight: 400;
-
-          font-style: italic;
-        }
-
-        .hht-final p {
-          max-width: 580px;
-
-          margin: 30px 0 0;
-
-          color: rgba(255,255,255,0.68);
-
-          font-size: 15px;
-
-          line-height: 1.8;
-        }
-
-        .hht-final-button {
-          display: inline-flex;
-
-          align-items: center;
-
-          justify-content: center;
-
-          width: fit-content;
-
-          margin-top: 32px;
-
-          padding: 15px 24px;
-
-          background: #ffffff;
-
-          color: var(--green) !important;
-
-          text-decoration: none;
-
-          font-size: 11px;
-
-          font-weight: 800;
-
-          letter-spacing: 0.08em;
-
-          text-transform: uppercase;
-        }
-
-        .hht-final-button:hover {
-          background: var(--gold);
-
-          color: var(--deep-green) !important;
-        }
-
-        /* =========================================================
-           FOOTER
-        ========================================================= */
-
-        .hht-footer {
-          background: #071f19;
-
-          color: #ffffff;
-        }
-
-        .hht-footer-inner {
-          width: min(1180px, calc(100% - 48px));
-
-          margin: 0 auto;
-
-          padding: 75px 0 0;
-        }
-
-        .hht-footer-grid {
-          display: grid;
-
-          grid-template-columns:
-            1.6fr
-            1fr
-            1fr
-            1.1fr;
-
-          gap: 55px;
-        }
-
-        .hht-footer-brand strong {
-          display: block;
-
-          font-size: 25px;
-
-          font-weight: 800;
-
-          letter-spacing: 0.16em;
-        }
-
-        .hht-footer-brand small {
-          display: block;
-
-          margin-top: 8px;
-
-          color: rgba(255,255,255,0.45);
-
-          font-size: 8px;
-
-          letter-spacing: 0.48em;
-
-          text-transform: uppercase;
-        }
-
-        .hht-footer-brand p {
-          max-width: 280px;
-
-          margin-top: 25px;
-
-          color: rgba(255,255,255,0.5);
-
-          font-size: 13px;
-
-          line-height: 1.8;
-        }
-
-        .hht-footer-column h4,
-        .hht-footer-contact h4 {
-          margin: 0 0 20px;
-
-          color: var(--gold);
-
-          font-size: 10px;
-
-          letter-spacing: 0.25em;
-
-          text-transform: uppercase;
-        }
-
-        .hht-footer-column a {
-          display: block;
-
-          margin-bottom: 12px;
-
-          color: rgba(255,255,255,0.62);
-
-          font-size: 13px;
-
-          text-decoration: none;
-        }
-
-        .hht-footer-column a:hover {
-          color: #ffffff;
-        }
-
-        .hht-footer-contact p {
-          margin: 0 0 10px;
-
-          color: rgba(255,255,255,0.62);
-
-          font-size: 13px;
-        }
-
-        .hht-footer-bottom {
-          display: flex;
-
-          justify-content: space-between;
-
-          margin-top: 65px;
-
-          padding: 20px 0 24px;
-
-          border-top: 1px solid rgba(255,255,255,0.1);
-
-          color: rgba(255,255,255,0.35);
-
-          font-size: 10px;
-        }
-
-        /* =========================================================
-           TABLET
-        ========================================================= */
-
-        @media (max-width: 1100px) {
-          .hht-header-inner {
-            grid-template-columns: 230px 1fr 230px;
-
-            padding: 0 35px;
-          }
-
-          .hht-nav {
-            gap: 25px;
-          }
-
-          .hht-hero-content {
-            width: calc(100% - 80px);
-          }
-
-          .hht-footer-grid {
-            grid-template-columns: 1.5fr 1fr 1fr;
-          }
-        }
-
-        /* =========================================================
-           MOBILE
-        ========================================================= */
-
-        @media (max-width: 850px) {
-          .hht-header {
-            height: 82px;
-          }
-
-          .hht-header-inner {
-            display: flex;
-
-            justify-content: space-between;
-
-            padding: 0 25px;
-          }
-
-          .hht-nav,
-          .hht-actions {
-            display: none;
-          }
-
-          .hht-brand-mark {
-            width: 43px;
-            height: 43px;
-          }
-
-          .hht-brand-copy strong {
-            font-size: 20px;
-          }
-
-          .hht-hero {
-            min-height: 600px;
-
-            background-position: 62% center;
-          }
-
-          .hht-hero-content {
-            width: calc(100% - 40px);
-
-            min-height: 600px;
-
-            padding-top: 205px;
-          }
-
-          .hht-hero h1 {
-            font-size: clamp(58px, 16vw, 86px);
-          }
-
-          .hht-hero-description {
-            max-width: 100%;
-
-            margin-top: 30px;
-
-            font-size: 14px;
-          }
-
-          .hht-content-grid {
-            grid-template-columns: 1fr;
-
-            gap: 40px;
-          }
-
-          .hht-sidebar {
-            display: none;
-          }
-
-          .hht-section-copy {
-            margin-left: 0;
-          }
-
-          .hht-footer-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-
-          .hht-footer-brand {
-            grid-column: 1 / -1;
-          }
-
-          .hht-footer-contact {
-            grid-column: 1 / -1;
-          }
-        }
-
-        @media (max-width: 600px) {
-          .hht-content {
-            width: calc(100% - 40px);
-
-            padding: 80px 0 100px;
-          }
-
-          .hht-section {
-            padding-bottom: 48px;
-
-            margin-bottom: 48px;
-          }
-
-          .hht-section-heading {
-            grid-template-columns: 40px 1fr;
-
-            gap: 12px;
-          }
-
-          .hht-section h2 {
-            font-size: 32px;
-          }
-
-          .hht-section-copy {
-            margin-top: 22px;
-          }
-
-          .hht-section-copy p {
-            font-size: 13px;
-          }
-
-          .hht-final-inner {
-            width: calc(100% - 40px);
-
-            min-height: 420px;
-          }
-
-          .hht-final h2 {
-            font-size: 55px;
-          }
-
-          .hht-footer-inner {
-            width: calc(100% - 40px);
-          }
-
-          .hht-footer-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .hht-footer-brand,
-          .hht-footer-contact {
-            grid-column: auto;
-          }
-
-          .hht-footer-bottom {
-            flex-direction: column;
-
-            gap: 8px;
-
-            align-items: flex-start;
-          }
-        }
-
-        @media (max-width: 420px) {
-          .hht-brand-copy strong {
-            font-size: 18px;
-          }
-
-          .hht-brand-copy small {
-            font-size: 7px;
-          }
-
-          .hht-hero h1 {
-            font-size: 54px;
-          }
-
-          .hht-section-heading {
-            display: block;
-          }
-
-          .hht-section-number {
-            display: block;
-
-            margin-bottom: 12px;
-          }
-        }
-      `}</style>
-
-      {/* =========================================================
-          HERO
-      ========================================================= */}
-
-      <section className="hht-hero">
-
-        {/* =======================================================
-            HEADER
-        ======================================================= */}
-
-        <header className="hht-header">
-          <div className="hht-header-inner">
-
-            <Link href="/" className="hht-brand">
-              <span className="hht-brand-mark">
-                H
-              </span>
-
-              <span className="hht-brand-copy">
-                <strong>hikinhigh</strong>
-                <small>travels</small>
-              </span>
-            </Link>
-
-            <nav className="hht-nav">
-              <Link href="/destinations">
-                Destinations
-              </Link>
-
-              <Link href="/hotels">
-                Hotels
-              </Link>
-
-              <Link href="/packages">
-                Packages
-              </Link>
-
-              <Link href="/adventures">
-                Adventures
-              </Link>
-
-              <Link href="/about">
-                About
-              </Link>
-            </nav>
-
-            <div className="hht-actions">
-              <Link
-                href="/login"
-                className="hht-login"
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/register"
-                className="hht-join"
-              >
-                Join us
-              </Link>
-            </div>
-
+    <main className={styles.page}>
+      {/* HERO */}
+      <section className={styles.hero}>
+        <div className={styles.heroOverlay} />
+
+        <div className={styles.heroInner}>
+          <div className={styles.heroEyebrow}>
+            HIKINHIGH TRAVELS
           </div>
-        </header>
-
-        {/* =======================================================
-            HERO CONTENT
-        ======================================================= */}
-
-        <div className="hht-hero-content">
-
-          <span className="hht-eyebrow">
-            LEGAL
-          </span>
 
           <h1>
-            Terms &amp;
-            <em>Conditions.</em>
+            Terms
+            <br />
+            <em>&amp; Conditions</em>
           </h1>
 
-          <p className="hht-hero-description">
-            The terms that apply when using the Hikinhigh Travels website
-            and travel services.
+          <p>
+            The terms that guide the use of our website,
+            travel services and experiences.
           </p>
-
-          <div className="hht-hero-meta">
-            <span>
-              Hikinhigh Travels
-            </span>
-
-            <span>
-              Terms &amp; Conditions
-            </span>
-          </div>
-
         </div>
 
+        <div className={styles.heroBottom}>
+          <span>Legal</span>
+          <span>13 Sections</span>
+        </div>
       </section>
 
-      {/* =========================================================
-          CONTENT
-      ========================================================= */}
+      {/* INTRO */}
+      <section className={styles.intro}>
+        <div className={styles.introNumber}>00</div>
 
-      <section className="hht-content">
-        <div className="hht-content-grid">
+        <div className={styles.introContent}>
+          <p className={styles.introLabel}>
+            PLEASE READ CAREFULLY
+          </p>
 
-          <aside className="hht-sidebar">
-            <span className="hht-sidebar-label">
+          <h2>
+            Travel should feel
+            <br />
+            <em>simple and clear.</em>
+          </h2>
+
+          <p className={styles.introText}>
+            These Terms &amp; Conditions explain the general terms that apply
+            when you use the Hikinhigh Travels website and engage with our
+            travel-related services, information and experiences.
+          </p>
+        </div>
+      </section>
+
+      {/* CONTENT AREA */}
+      <section className={styles.contentSection}>
+        <div className={styles.contentGrid}>
+          {/* SIDEBAR */}
+          <aside className={styles.sidebar}>
+            <div className={styles.sidebarTitle}>
               On this page
-            </span>
+            </div>
 
-            {sections.map((section) => (
-              <a
-                key={section.id}
-                href={`#${section.id}`}
-              >
-                {section.number} &nbsp; {section.title}
-              </a>
-            ))}
+            <nav className={styles.sidebarNav}>
+              {sections.map((section) => (
+                <a key={section.id} href={`#${section.id}`}>
+                  <span>{section.number}</span>
+                  <span>{section.title}</span>
+                </a>
+              ))}
+            </nav>
           </aside>
 
-          <div>
+          {/* MAIN CONTENT */}
+          <div className={styles.sections}>
             {sections.map((section) => (
               <article
                 key={section.id}
                 id={section.id}
-                className="hht-section"
+                className={styles.section}
               >
-                <div className="hht-section-heading">
-
-                  <span className="hht-section-number">
-                    {section.number}
-                  </span>
-
-                  <h2>
-                    {section.title}
-                  </h2>
-
+                <div className={styles.sectionNumber}>
+                  {section.number}
                 </div>
 
-                <div className="hht-section-copy">
-                  {section.content}
-                </div>
+                <div className={styles.sectionBody}>
+                  <p className={styles.sectionEyebrow}>
+                    SECTION {section.number}
+                  </p>
 
+                  <h2>{section.title}</h2>
+
+                  <div className={styles.sectionText}>
+                    {section.content}
+                  </div>
+                </div>
               </article>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* =========================================================
-          FINAL CTA
-      ========================================================= */}
+      {/* CTA */}
+      <section className={styles.cta}>
+        <div className={styles.ctaInner}>
+          <div className={styles.ctaCopy}>
+            <span className={styles.ctaEyebrow}>
+              HAVE QUESTIONS?
+            </span>
 
-      <section className="hht-final">
-        <div className="hht-final-inner">
+            <h2>
+              Start your
+              <br />
+              <em>journey.</em>
+            </h2>
 
-          <span className="hht-final-label">
-            READY TO TRAVEL?
-          </span>
+            <p>
+              If you have questions about these Terms &amp; Conditions
+              or anything related to your journey, our team is here to help.
+            </p>
+          </div>
 
-          <h2>
-            Start your
-            <br />
-            <em>journey.</em>
-          </h2>
+          <div className={styles.ctaActions}>
+            <Link
+              href="/contact"
+              className={styles.primaryButton}
+            >
+              Contact Us
+              <span>↗</span>
+            </Link>
 
-          <p>
-            Explore destinations, discover memorable stays and find your
-            next experience with Hikinhigh Travels.
-          </p>
+            <Link
+              href="/destinations"
+              className={styles.secondaryButton}
+            >
+              Explore Destinations
+              <span>→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
 
-          <Link
-            href="/destinations"
-            className="hht-final-button"
-          >
-            Explore Destinations →
+      {/* FOOTER LEGAL STRIP */}
+      <section className={styles.legalStrip}>
+        <div>
+          <span>Hikinhigh Travels</span>
+          <span>Terms &amp; Conditions</span>
+        </div>
+
+        <div>
+          <Link href="/privacy-policy">
+            Privacy Policy
           </Link>
 
+          <Link href="/contact">
+            Contact
+          </Link>
         </div>
       </section>
-
-      {/* =========================================================
-          FOOTER
-      ========================================================= */}
-
-      <footer className="hht-footer">
-        <div className="hht-footer-inner">
-
-          <div className="hht-footer-grid">
-
-            <div className="hht-footer-brand">
-              <Link href="/">
-                <strong>
-                  HIKINHIGH
-                </strong>
-
-                <small>
-                  TRAVELS
-                </small>
-              </Link>
-
-              <p>
-                Beautiful stays, unforgettable journeys and experiences
-                worth travelling for.
-              </p>
-            </div>
-
-            <div className="hht-footer-column">
-              <h4>
-                Explore
-              </h4>
-
-              <Link href="/destinations">
-                Destinations
-              </Link>
-
-              <Link href="/hotels">
-                Hotels
-              </Link>
-
-              <Link href="/packages">
-                Tour Packages
-              </Link>
-
-              <Link href="/adventures">
-                Adventures
-              </Link>
-            </div>
-
-            <div className="hht-footer-column">
-              <h4>
-                Company
-              </h4>
-
-              <Link href="/about">
-                About Us
-              </Link>
-
-              <Link href="/contact">
-                Contact
-              </Link>
-
-              <Link href="/privacy-policy">
-                Privacy Policy
-              </Link>
-
-              <Link href="/terms-conditions">
-                Terms &amp; Conditions
-              </Link>
-            </div>
-
-            <div className="hht-footer-contact">
-              <h4>
-                Contact
-              </h4>
-
-              <p>
-                hello@hikinhigh.com
-              </p>
-
-              <p>
-                +91 999-060-1105
-              </p>
-            </div>
-
-          </div>
-
-          <div className="hht-footer-bottom">
-            <span>
-              © {new Date().getFullYear()} Hikinhigh Travels
-            </span>
-
-            <span>
-              Travel further. Experience more.
-            </span>
-          </div>
-
-        </div>
-      </footer>
     </main>
   );
 }

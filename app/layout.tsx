@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+import { CurrencyProvider } from "../components/providers/CurrencyProvider";
+
 export const metadata: Metadata = {
-  title: "Hikinhigh Travels | Travel Beyond the Ordinary",
+  title:
+    "Hikinhigh Travels | Travel Beyond the Ordinary",
   description:
-    "Book hotels, tour packages and adventure experiences with Hikinhigh Travels.",
+    "Discover stays, journeys and experiences around the world with Hikinhigh Travels.",
 };
 
 export default function RootLayout({
@@ -14,7 +19,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <CurrencyProvider>
+          <Header />
+
+          {children}
+
+          <Footer />
+        </CurrencyProvider>
+      </body>
     </html>
   );
 }

@@ -183,7 +183,6 @@ function PackageCard({ item }: { item: Package }) {
 
 export default function PackagesPage() {
   const [activeFilter, setActiveFilter] = useState("All Journeys");
-  const [mobileMenu, setMobileMenu] = useState(false);
 
   const filteredPackages = useMemo(() => {
     if (activeFilter === "All Journeys") {
@@ -199,115 +198,10 @@ export default function PackagesPage() {
 
   return (
     <main className="packages-page">
-      {/* HEADER */}
-      <header className="packages-header">
-        <div className="packages-header-inner">
-          <Link href="/" className="packages-logo">
-            <span className="packages-logo-main">HIKINHIGH</span>
-            <span className="packages-logo-sub">
-              TRAVELS
-            </span>
-          </Link>
+      {/* =====================================================
+          HERO
+      ===================================================== */}
 
-          <nav className="packages-desktop-nav">
-            <Link href="/destinations">Destinations</Link>
-            <Link href="/hotels">Hotels</Link>
-            <Link
-              href="/packages"
-              className="packages-nav-active"
-            >
-              Packages
-            </Link>
-            <Link href="/adventures">Adventures</Link>
-            <Link href="/about">About</Link>
-          </nav>
-
-          <div className="packages-header-actions">
-            <Link
-              href="/login"
-              className="packages-login"
-            >
-              Login
-            </Link>
-
-            <Link
-              href="/register"
-              className="packages-join"
-            >
-              Join us
-            </Link>
-          </div>
-
-          <button
-            type="button"
-            className="packages-menu-button"
-            onClick={() => setMobileMenu((value) => !value)}
-            aria-label="Toggle navigation"
-            aria-expanded={mobileMenu}
-          >
-            <span />
-            <span />
-          </button>
-        </div>
-
-        {mobileMenu && (
-          <div className="packages-mobile-menu">
-            <Link
-              href="/destinations"
-              onClick={() => setMobileMenu(false)}
-            >
-              Destinations
-            </Link>
-
-            <Link
-              href="/hotels"
-              onClick={() => setMobileMenu(false)}
-            >
-              Hotels
-            </Link>
-
-            <Link
-              href="/packages"
-              className="packages-mobile-active"
-              onClick={() => setMobileMenu(false)}
-            >
-              Packages
-            </Link>
-
-            <Link
-              href="/adventures"
-              onClick={() => setMobileMenu(false)}
-            >
-              Adventures
-            </Link>
-
-            <Link
-              href="/about"
-              onClick={() => setMobileMenu(false)}
-            >
-              About
-            </Link>
-
-            <div className="packages-mobile-actions">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenu(false)}
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/register"
-                onClick={() => setMobileMenu(false)}
-              >
-                Join us
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* HERO */}
       <section className="packages-hero">
         <div className="packages-hero-image">
           <img
@@ -342,7 +236,10 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* INTRO */}
+      {/* =====================================================
+          INTRO
+      ===================================================== */}
+
       <section className="packages-intro">
         <div className="packages-intro-label">
           OUR JOURNEYS
@@ -364,7 +261,10 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* FILTERS */}
+      {/* =====================================================
+          FILTERS
+      ===================================================== */}
+
       <section className="packages-discovery">
         <div className="packages-section-header">
           <div>
@@ -402,7 +302,10 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* FEATURED PACKAGE */}
+      {/* =====================================================
+          FEATURED PACKAGE
+      ===================================================== */}
+
       <section className="packages-featured">
         <div className="packages-featured-image">
           <img
@@ -420,18 +323,14 @@ export default function PackagesPage() {
             {featuredPackage.destination}
           </span>
 
-          <h2>
-            {featuredPackage.name}
-          </h2>
+          <h2>{featuredPackage.name}</h2>
 
           <div className="packages-featured-meta">
             <span>{featuredPackage.duration}</span>
             <span>From {featuredPackage.price}</span>
           </div>
 
-          <p>
-            {featuredPackage.description}
-          </p>
+          <p>{featuredPackage.description}</p>
 
           <div className="packages-featured-highlights">
             {featuredPackage.highlights.map((highlight) => (
@@ -452,7 +351,10 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* COLLECTION */}
+      {/* =====================================================
+          COLLECTION
+      ===================================================== */}
+
       <section className="packages-collection">
         <div className="packages-collection-heading">
           <div>
@@ -485,7 +387,10 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* PHILOSOPHY */}
+      {/* =====================================================
+          PHILOSOPHY
+      ===================================================== */}
+
       <section className="packages-philosophy">
         <div className="packages-philosophy-left">
           <span className="packages-section-kicker">
@@ -508,7 +413,9 @@ export default function PackagesPage() {
           <div className="packages-philosophy-items">
             <div>
               <span>01</span>
+
               <h3>Stay well</h3>
+
               <p>
                 Comfortable stays in locations that make
                 sense for the journey.
@@ -517,7 +424,9 @@ export default function PackagesPage() {
 
             <div>
               <span>02</span>
+
               <h3>Explore deeply</h3>
+
               <p>
                 See the places beyond the standard
                 postcard itinerary.
@@ -526,7 +435,9 @@ export default function PackagesPage() {
 
             <div>
               <span>03</span>
+
               <h3>Remember more</h3>
+
               <p>
                 Experiences that become stories long after
                 you return home.
@@ -536,7 +447,10 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* =====================================================
+          CTA
+      ===================================================== */}
+
       <section className="packages-final-cta">
         <div className="packages-final-cta-image">
           <img
@@ -572,71 +486,6 @@ export default function PackagesPage() {
           </Link>
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="packages-footer">
-        <div className="packages-footer-top">
-          <div className="packages-footer-brand">
-            <Link href="/" className="packages-footer-logo">
-              HIKINHIGH
-            </Link>
-
-            <p>
-              Travel further.
-              <br />
-              Remember more.
-            </p>
-          </div>
-
-          <div className="packages-footer-column">
-            <span>EXPLORE</span>
-
-            <Link href="/destinations">
-              Destinations
-            </Link>
-
-            <Link href="/hotels">Hotels</Link>
-
-            <Link href="/packages">Packages</Link>
-
-            <Link href="/adventures">
-              Adventures
-            </Link>
-          </div>
-
-          <div className="packages-footer-column">
-            <span>COMPANY</span>
-
-            <Link href="/about">About Us</Link>
-
-            <Link href="/contact">Contact</Link>
-
-            <Link href="/faq">FAQ</Link>
-          </div>
-
-          <div className="packages-footer-column">
-            <span>LEGAL</span>
-
-            <Link href="/privacy-policy">
-              Privacy Policy
-            </Link>
-
-            <Link href="/terms-conditions">
-              Terms & Conditions
-            </Link>
-          </div>
-        </div>
-
-        <div className="packages-footer-bottom">
-          <span>
-            © {new Date().getFullYear()} Hikinhigh Travels
-          </span>
-
-          <span>
-            MADE FOR THE CURIOUS
-          </span>
-        </div>
-      </footer>
     </main>
   );
 }

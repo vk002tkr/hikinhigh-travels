@@ -1,233 +1,467 @@
+"use client";
+
 import Link from "next/link";
+
+const exploreLinks = [
+  { label: "Destinations", href: "/destinations" },
+  { label: "Stays", href: "/hotels" },
+  { label: "Journeys", href: "/packages" },
+  { label: "Experiences", href: "/adventures" },
+];
+
+const companyLinks = [
+  { label: "About Us", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "FAQ", href: "/faq" },
+];
+
+const supportLinks = [
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms & Conditions", href: "/terms-conditions" },
+];
+
+function InstagramIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="social-icon"
+    >
+      <rect
+        x="3"
+        y="3"
+        width="18"
+        height="18"
+        rx="5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="4.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <circle cx="17.4" cy="6.7" r="1.15" fill="currentColor" />
+    </svg>
+  );
+}
+
+function FacebookIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="social-icon"
+    >
+      <path
+        d="M14 8h3V4.5c-.5-.1-1.8-.2-3.3-.2-3.3 0-5.6 2-5.6 5.7v3.2H5v3.9h3.1v6.6h3.9v-6.6h3.2l.5-3.9H12v-2.8c0-1.1.3-1.8 2-1.8Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function LinkedInIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="social-icon"
+    >
+      <path
+        d="M5.1 7.1A2.1 2.1 0 1 0 5.1 3a2.1 2.1 0 0 0 0 4.1ZM3.4 21h3.4V9H3.4v12ZM9 9v12h3.4v-6.7c0-1.8.3-3.5 2.6-3.5 2.2 0 2.2 2 2.2 3.6V21h3.4v-7.3c0-3.6-.8-6.4-5-6.4-2 0-3.3 1.1-3.8 2.1h-.1V9H9Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
 
 export default function Footer() {
   return (
-    <footer className="hh-footer">
-      <div className="hh-footer-main">
-        <div className="hh-footer-brand">
-          <Link href="/" className="hh-footer-logo">
+    <footer className="site-footer">
+      <div className="footer-main">
+        {/* Brand */}
+        <div className="footer-brand">
+          <Link href="/" className="footer-logo-link">
             <img
               src="/images/hikinhigh-logo.png"
               alt="Hikinhigh Travels"
+              className="footer-logo"
             />
           </Link>
 
-          <p>
-            Beautiful stays, thoughtful journeys and
-            experiences worth remembering.
+          <p className="footer-description">
+            Thoughtfully designed journeys, remarkable stays and experiences
+            that take you further.
           </p>
 
-          <Link
-            href="/register"
-            className="hh-footer-cta"
-          >
-            Start exploring <span>→</span>
+          <Link href="/destinations" className="explore-button">
+            Explore the world
+            <span>→</span>
           </Link>
         </div>
 
-        <div className="hh-footer-column">
-          <span>Explore</span>
+        {/* Explore */}
+        <div className="footer-column">
+          <h3>Explore</h3>
 
-          <Link href="/destinations">
-            Destinations
-          </Link>
-
-          <Link href="/hotels">
-            Hotels
-          </Link>
-
-          <Link href="/packages">
-            Tour Packages
-          </Link>
-
-          <Link href="/adventures">
-            Adventures
-          </Link>
+          <nav>
+            {exploreLinks.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <div className="hh-footer-column">
-          <span>Company</span>
+        {/* Company */}
+        <div className="footer-column">
+          <h3>Company</h3>
 
-          <Link href="/about">
-            About us
-          </Link>
-
-          <Link href="/contact">
-            Contact
-          </Link>
-
-          <Link href="/faq">
-            FAQ
-          </Link>
-
-          <Link href="/login">
-            Login
-          </Link>
+          <nav>
+            {companyLinks.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <div className="hh-footer-column">
-          <span>Legal</span>
+        {/* Support */}
+        <div className="footer-column">
+          <h3>Support</h3>
 
-          <Link href="/privacy-policy">
-            Privacy Policy
-          </Link>
+          <nav>
+            {supportLinks.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-          <Link href="/terms-conditions">
-            Terms & Conditions
-          </Link>
+        {/* Connect */}
+        <div className="footer-column contact-column">
+          <h3>Connect</h3>
+
+          <div className="contact-details">
+            <a href="mailto:Connect@hikinhigh.com">
+              Connect@hikinhigh.com
+            </a>
+
+            <a href="tel:+918130069469">
+              +91 813 006 9469
+            </a>
+
+            <span>Gurugram, Haryana, India</span>
+          </div>
+
+          {/* Social Media */}
+          <div className="social-links">
+            <a
+              href="https://www.instagram.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              className="social-link"
+            >
+              <InstagramIcon />
+            </a>
+
+            <a
+              href="https://www.facebook.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook"
+              className="social-link"
+            >
+              <FacebookIcon />
+            </a>
+
+            <a
+              href="https://www.linkedin.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="LinkedIn"
+              className="social-link"
+            >
+              <LinkedInIcon />
+            </a>
+          </div>
         </div>
       </div>
 
-      <div className="hh-footer-bottom">
-        <span>
-          © {new Date().getFullYear()} Hikinhigh Travels.
-          All rights reserved.
-        </span>
+      {/* Bottom */}
+      <div className="footer-bottom">
+        <p>
+          © {new Date().getFullYear()} Hikinhigh Travels. All rights reserved.
+        </p>
 
-        <span>
-          Travel more. Live more.
+        <div className="bottom-links">
+          <Link href="/privacy-policy">Privacy</Link>
+          <Link href="/terms-conditions">Terms</Link>
+        </div>
+
+        <span className="travel-more">
+          Travel further. Experience more.
         </span>
       </div>
 
       <style jsx>{`
-        .hh-footer {
-          background: #103d31;
-          color: #ffffff;
-        }
-
-        .hh-footer-main {
+        .site-footer {
           width: 100%;
-          max-width: 1400px;
+          background: #ffffff;
+          color: #173f34;
+          border-top: 1px solid rgba(16, 61, 49, 0.1);
+        }
+
+        .footer-main {
+          width: min(100% - 48px, 1320px);
           margin: 0 auto;
-          padding: 80px 50px 70px;
+          padding: 72px 0 64px;
           display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1fr;
-          gap: 60px;
-          box-sizing: border-box;
+          grid-template-columns: 1.8fr 1fr 1fr 1fr 1.35fr;
+          gap: 54px;
         }
 
-        .hh-footer-brand {
-          max-width: 340px;
+        .footer-brand {
+          max-width: 310px;
         }
 
-        .hh-footer-logo {
+        .footer-logo-link {
           display: inline-flex;
           align-items: center;
-          margin-bottom: 28px;
-        }
-
-        .hh-footer-logo img {
-          display: block;
-          width: 190px;
-          height: auto;
-          max-height: 70px;
-          object-fit: contain;
-        }
-
-        .hh-footer-brand p {
-          margin: 0 0 28px;
-          max-width: 300px;
-          color: rgba(255, 255, 255, 0.72);
-          font-size: 15px;
-          line-height: 1.8;
-        }
-
-        .hh-footer-cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          color: #ffffff;
-          font-size: 13px;
-          font-weight: 700;
           text-decoration: none;
         }
 
-        .hh-footer-cta span {
-          font-size: 18px;
+        .footer-logo {
+          width: 128px;
+          height: 62px;
+          display: block;
+          object-fit: contain;
+          object-position: left center;
+        }
+
+        .footer-description {
+          margin: 18px 0 22px;
+          max-width: 285px;
+          color: #66736d;
+          font-size: 13px;
+          line-height: 1.8;
+        }
+
+        .explore-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          color: #173f34;
+          font-size: 12px;
+          font-weight: 600;
+          text-decoration: none;
+          letter-spacing: 0.03em;
+        }
+
+        .explore-button span {
+          font-size: 16px;
           transition: transform 0.2s ease;
         }
 
-        .hh-footer-cta:hover span {
+        .explore-button:hover span {
           transform: translateX(4px);
         }
 
-        .hh-footer-column {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 14px;
-        }
-
-        .hh-footer-column > span {
-          margin-bottom: 8px;
-          color: rgba(255, 255, 255, 0.45);
+        .footer-column h3 {
+          margin: 4px 0 22px;
+          color: #173f34;
           font-size: 11px;
-          font-weight: 800;
+          font-weight: 700;
           letter-spacing: 0.14em;
           text-transform: uppercase;
         }
 
-        .hh-footer-column a {
-          color: rgba(255, 255, 255, 0.78);
-          font-size: 14px;
+        .footer-column nav {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 13px;
+        }
+
+        .footer-column nav a {
+          color: #69756f;
+          font-size: 13px;
+          line-height: 1.5;
           text-decoration: none;
-          transition: color 0.2s ease;
+          transition:
+            color 0.18s ease,
+            transform 0.18s ease;
         }
 
-        .hh-footer-column a:hover {
+        .footer-column nav a:hover {
+          color: #173f34;
+          transform: translateX(2px);
+        }
+
+        .contact-details {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 11px;
+        }
+
+        .contact-details a,
+        .contact-details span {
+          color: #69756f;
+          font-size: 12px;
+          line-height: 1.5;
+          text-decoration: none;
+        }
+
+        .contact-details a:hover {
+          color: #173f34;
+        }
+
+        /* Social icons */
+        .social-links {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 24px;
+        }
+
+        .social-link {
+          width: 34px;
+          height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(16, 61, 49, 0.16);
+          border-radius: 50%;
+          color: #173f34;
+          text-decoration: none;
+          transition:
+            background 0.2s ease,
+            color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
+        }
+
+        .social-link:hover {
+          background: #173f34;
+          border-color: #173f34;
           color: #ffffff;
+          transform: translateY(-2px);
         }
 
-        .hh-footer-bottom {
-          width: 100%;
-          max-width: 1400px;
+        .social-icon {
+          width: 16px;
+          height: 16px;
+          display: block;
+        }
+
+        .footer-bottom {
+          width: min(100% - 48px, 1320px);
           margin: 0 auto;
-          padding: 22px 50px;
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
+          padding: 21px 0 24px;
+          border-top: 1px solid rgba(16, 61, 49, 0.1);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 20px;
-          color: rgba(255, 255, 255, 0.45);
-          font-size: 11px;
-          box-sizing: border-box;
+          gap: 24px;
         }
 
-        @media (max-width: 900px) {
-          .hh-footer-main {
-            grid-template-columns: 1.5fr 1fr 1fr;
-            gap: 40px;
-            padding: 65px 30px 50px;
+        .footer-bottom p {
+          margin: 0;
+          color: #87908b;
+          font-size: 10px;
+        }
+
+        .bottom-links {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+        }
+
+        .bottom-links a {
+          color: #69756f;
+          font-size: 10px;
+          text-decoration: none;
+        }
+
+        .bottom-links a:hover {
+          color: #173f34;
+        }
+
+        .travel-more {
+          color: #87908b;
+          font-size: 10px;
+          font-style: italic;
+        }
+
+        @media (max-width: 1050px) {
+          .footer-main {
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
           }
 
-          .hh-footer-brand {
-            grid-column: 1 / -1;
-            max-width: 500px;
-          }
-
-          .hh-footer-bottom {
-            padding: 20px 30px;
+          .contact-column {
+            grid-column: span 2;
           }
         }
 
-        @media (max-width: 600px) {
-          .hh-footer-main {
-            grid-template-columns: 1fr 1fr;
-            padding: 55px 25px 45px;
+        @media (max-width: 760px) {
+          .footer-main {
+            width: min(100% - 36px, 620px);
+            padding: 52px 0 44px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 42px 28px;
           }
 
-          .hh-footer-brand {
-            grid-column: 1 / -1;
+          .footer-brand {
+            grid-column: span 2;
+            max-width: 420px;
           }
 
-          .hh-footer-logo img {
-            width: 165px;
+          .contact-column {
+            grid-column: span 2;
           }
 
-          .hh-footer-bottom {
-            padding: 20px 25px;
-            flex-direction: column;
+          .footer-bottom {
+            width: min(100% - 36px, 620px);
             align-items: flex-start;
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .bottom-links {
+            order: 3;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .footer-main {
+            width: min(100% - 30px, 620px);
+            grid-template-columns: 1fr;
+            gap: 34px;
+          }
+
+          .footer-brand,
+          .contact-column {
+            grid-column: auto;
+          }
+
+          .footer-description {
+            font-size: 12px;
+          }
+
+          .footer-bottom {
+            width: min(100% - 30px, 620px);
+          }
+
+          .travel-more {
+            display: none;
           }
         }
       `}</style>
