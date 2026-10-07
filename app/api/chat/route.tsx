@@ -1,13 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
-const apiKey = process.env.GEMINI_API_KEY;
-
-const ai = apiKey
-  ? new GoogleGenAI({
-      apiKey,
-    })
-  : null;
+export const dynamic = "force-dynamic";
 
 const SYSTEM_INSTRUCTIONS = `
 You are the Hikinhigh Travels AI Travel Assistant.
@@ -141,7 +135,14 @@ type GeminiContent = {
 
 export async function POST(request: Request) {
   try {
-    if (!apiKey || !ai) {
+    /*
+     * Read the API key at runtime instead of defining it at module
+     * level. This prevents the secret from being unnecessarily
+     * embedded into the build output.
+     */
+    const apiKey = process.env["GEMINI_API_KEY"];
+
+    if (!apiKey) {
       console.error("Missing GEMINI_API_KEY");
 
       return NextResponse.json(
@@ -154,6 +155,10 @@ export async function POST(request: Request) {
         }
       );
     }
+
+    const ai = new GoogleGenAI({
+      apiKey,
+    });
 
     const body: unknown = await request.json();
 
@@ -187,13 +192,16 @@ export async function POST(request: Request) {
           typeof typedMessage.content === "string"
         );
       })
-      .map((message: ChatMessage): ChatMessage => ({
-        role: message.role,
-        content: message.content.trim().slice(0, 4000),
-      }))
-      .filter((message: ChatMessage): boolean => {
-        return message.content.length > 0;
-      })
+      .map(
+        (message: ChatMessage): ChatMessage => ({
+          role: message.role,
+          content: message.content.trim().slice(0, 4000),
+        })
+      )
+      .filter(
+        (message: ChatMessage): boolean =>
+          message.content.length > 0
+      )
       .slice(-20);
 
     if (messages.length === 0) {
