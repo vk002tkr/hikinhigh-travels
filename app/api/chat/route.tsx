@@ -133,17 +133,41 @@ type GeminiContent = {
   }[];
 };
 
+function getErrorDetails(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  if (typeof error === "object" && error !== null) {
+    try {
+      return {
+        name: "UnknownError",
+        message: JSON.stringify(error),
+      };
+    } catch {
+      return {
+        name: "UnknownError",
+        message: String(error),
+      };
+    }
+  }
+
+  return {
+    name: "UnknownError",
+    message: String(error),
+  };
+}
+
 export async function POST(request: Request) {
   try {
-    /*
-     * Read the API key at runtime instead of defining it at module
-     * level. This prevents the secret from being unnecessarily
-     * embedded into the build output.
-     */
     const apiKey = process.env["GEMINI_API_KEY"];
 
     if (!apiKey) {
-      console.error("Missing GEMINI_API_KEY");
+      console.error("Hikinhigh chatbot: GEMINI_API_KEY is missing.");
 
       return NextResponse.json(
         {
@@ -226,6 +250,10 @@ export async function POST(request: Request) {
       })
     );
 
+    console.log(
+      `Hikinhigh chatbot: sending ${contents.length} message(s) to Gemini.`
+    );
+
     const response = await ai.models.generateContent({
       model: "gemini-3.8-flash",
       contents,
@@ -239,6 +267,10 @@ export async function POST(request: Request) {
     const answer = response.text?.trim();
 
     if (!answer) {
+      console.error(
+        "Hikinhigh chatbot: Gemini returned an empty response."
+      );
+
       return NextResponse.json(
         {
           error:
@@ -250,11 +282,19 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log("Hikinhigh chatbot: Gemini response received.");
+
     return NextResponse.json({
       message: answer,
     });
-  } catch (error) {
-    console.error("Hikinhigh Gemini chatbot error:", error);
+  } catch (error: unknown) {
+    const details = getErrorDetails(error);
+
+    console.error("Hikinhigh Gemini chatbot error:", {
+      name: details.name,
+      message: details.message,
+      stack: details.stack,
+    });
 
     return NextResponse.json(
       {
