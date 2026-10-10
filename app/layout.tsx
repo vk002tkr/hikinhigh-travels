@@ -1,10 +1,10 @@
+
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import Chatbot from "../components/chatbot/Chatbot";
 import { CurrencyProvider } from "../components/providers/CurrencyProvider";
+import SiteChrome from "../components/layout/SiteChrome";
 
 export const metadata: Metadata = {
   title: "Hikinhigh Travels | Travel Beyond the Ordinary",
@@ -15,19 +15,13 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en">
       <body>
         <CurrencyProvider>
-          <Header />
-
-          {children}
-
-          <Footer />
-
-          <Chatbot />
+          <SiteChrome>{children}</SiteChrome>
         </CurrencyProvider>
       </body>
     </html>
