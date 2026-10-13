@@ -258,10 +258,9 @@ export async function POST(request: Request) {
       model: "gemini-3.8-flash",
       contents,
       config: {
-        systemInstruction: SYSTEM_INSTRUCTIONS,
-        maxOutputTokens: 500,
-        temperature: 0.7,
-      },
+  systemInstruction: SYSTEM_INSTRUCTIONS,
+  maxOutputTokens: 500,
+},
     });
 
     const answer = response.text?.trim();
