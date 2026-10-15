@@ -311,9 +311,66 @@ export default function Home() {
           )}
         </div>
 
-        {/* BOOKING */}
+        {/* MOBILE BOOKING SEARCH: shown in the blank space below the hero copy */}
+        <div className="booking-wrapper booking-wrapper-mobile">
+          <div className="booking-box">
+            <div className="booking-tabs">
+              {["Stays", "Journeys", "Experiences"].map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={activeSearch === item ? "tab-active" : ""}
+                  onClick={() => setActiveSearch(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
 
-        <div className="booking-wrapper">
+            <div className="booking-fields">
+              <BookingField label="Destination" value="Where are you going?" />
+              <BookingField label="Check in" value="Add dates" />
+              <BookingField label="Check out" value="Add dates" />
+              <BookingField label="Travellers" value="2 Guests" />
+              <button
+                type="button"
+                className="search-button"
+                onClick={() => {
+                  if (activeSearch === "Stays") {
+                    window.location.href = "/hotels";
+                  } else if (activeSearch === "Journeys") {
+                    window.location.href = "/packages";
+                  } else {
+                    window.location.href = "/adventures";
+                  }
+                }}
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* INTRO */}
+
+      <section
+        id="about"
+        className="intro-section"
+      >
+        {/* BOOKING SEARCH */}
+
+        <div
+          className="booking-wrapper intro-booking-wrapper booking-wrapper-desktop"
+          style={{
+            position: "relative",
+            inset: "auto",
+            width: "min(1240px, calc(100% - 48px))",
+            margin: "-80px auto 80px",
+            zIndex: 3,
+          }}
+        >
           <div className="booking-box">
             <div className="booking-tabs">
               {[
@@ -386,14 +443,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
 
-      {/* INTRO */}
-
-      <section
-        id="about"
-        className="intro-section"
-      >
         <div className="content-width intro-grid">
           <div>
             <span className="eyebrow">
@@ -803,6 +853,103 @@ export default function Home() {
           </a>
         </div>
       </section>
+
+      <style jsx global>{`
+        .booking-wrapper-mobile {
+          display: none;
+        }
+
+        @media (max-width: 700px) {
+          .booking-wrapper-mobile {
+            display: block;
+            position: absolute;
+            right: 14px;
+            bottom: 20px;
+            left: 14px;
+            width: auto;
+            margin: 0;
+            z-index: 10;
+          }
+
+          .booking-wrapper-desktop {
+            display: none !important;
+          }
+
+          .hero {
+            min-height: 900px;
+            padding-bottom: 10;
+          }
+
+          .hero-content {
+            min-height: 900px;
+            padding-top: 110px;
+            padding-bottom: 100px;
+            align-items: flex-start;
+          }
+
+          .slider-controls {
+            right: 18px;
+            bottom: 315px;
+          }
+
+          .slide-progress {
+            right: 18px;
+            bottom: 282px;
+          }
+
+          .booking-wrapper-mobile .booking-box {
+            padding: 10px;
+            border-radius: 14px;
+          }
+
+          .booking-wrapper-mobile .booking-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 2px;
+            padding: 0 0 8px;
+          }
+
+          .booking-wrapper-mobile .booking-tabs button {
+            min-width: 0;
+            padding: 10px 3px;
+            font-size: 10px;
+            white-space: nowrap;
+          }
+
+          .booking-wrapper-mobile .booking-fields {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .booking-wrapper-mobile .booking-field {
+            min-height: 58px;
+            padding: 10px 8px;
+          }
+
+          .booking-wrapper-mobile .booking-field strong {
+            font-size: 11px;
+          }
+
+          .booking-wrapper-mobile .search-button {
+            grid-column: 1 / -1;
+            min-height: 44px;
+            margin: 8px 4px 2px;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .hero {
+            min-height: 930px;
+          }
+
+          .hero-content {
+            min-height: 930px;
+          }
+
+          .booking-wrapper-mobile .booking-field strong {
+            font-size: 10px;
+          }
+        }
+      `}</style>
     </main>
   );
 }

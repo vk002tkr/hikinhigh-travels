@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -108,8 +109,7 @@ export default function Footer() {
         {/* Explore */}
         <div className="footer-column">
           <h3>Explore</h3>
-
-          <nav>
+          <nav aria-label="Explore">
             {exploreLinks.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
@@ -121,8 +121,7 @@ export default function Footer() {
         {/* Company */}
         <div className="footer-column">
           <h3>Company</h3>
-
-          <nav>
+          <nav aria-label="Company">
             {companyLinks.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
@@ -134,8 +133,7 @@ export default function Footer() {
         {/* Support */}
         <div className="footer-column">
           <h3>Support</h3>
-
-          <nav>
+          <nav aria-label="Support">
             {supportLinks.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
@@ -153,9 +151,7 @@ export default function Footer() {
               Connect@hikinhigh.com
             </a>
 
-            <a href="tel:+918130069469">
-              +91 813 006 9469
-            </a>
+            <a href="tel:+918130069469">+91 813 006 9469</a>
 
             <span>Gurugram, Haryana, India</span>
           </div>
@@ -163,7 +159,7 @@ export default function Footer() {
           {/* Social Media */}
           <div className="social-links">
             <a
-              href="https://www.instagram.com/"
+              href="https://www.instagram.com/hikinhigh/"
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
@@ -173,7 +169,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="https://www.facebook.com/"
+              href="https://www.facebook.com/profile.php?id=61571410595919"
               target="_blank"
               rel="noreferrer"
               aria-label="Facebook"
@@ -183,7 +179,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="https://www.linkedin.com/"
+              href="https://www.linkedin.com/in/hikinhigh-travels-a32a65396/"
               target="_blank"
               rel="noreferrer"
               aria-label="LinkedIn"
@@ -191,6 +187,7 @@ export default function Footer() {
             >
               <LinkedInIcon />
             </a>
+
           </div>
         </div>
       </div>
@@ -274,6 +271,10 @@ export default function Footer() {
           transform: translateX(4px);
         }
 
+        .footer-column {
+          min-width: 0;
+        }
+
         .footer-column h3 {
           margin: 4px 0 22px;
           color: #173f34;
@@ -295,6 +296,7 @@ export default function Footer() {
           font-size: 13px;
           line-height: 1.5;
           text-decoration: none;
+          overflow-wrap: anywhere;
           transition:
             color 0.18s ease,
             transform 0.18s ease;
@@ -318,13 +320,13 @@ export default function Footer() {
           font-size: 12px;
           line-height: 1.5;
           text-decoration: none;
+          overflow-wrap: anywhere;
         }
 
         .contact-details a:hover {
           color: #173f34;
         }
 
-        /* Social icons */
         .social-links {
           display: flex;
           align-items: center;
@@ -404,6 +406,7 @@ export default function Footer() {
         @media (max-width: 1050px) {
           .footer-main {
             grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 32px;
           }
 
           .contact-column {
@@ -415,17 +418,17 @@ export default function Footer() {
           .footer-main {
             width: min(100% - 36px, 620px);
             padding: 52px 0 44px;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 42px 28px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 36px 18px;
           }
 
           .footer-brand {
-            grid-column: span 2;
+            grid-column: 1 / -1;
             max-width: 420px;
           }
 
           .contact-column {
-            grid-column: span 2;
+            grid-column: 1 / -1;
           }
 
           .footer-bottom {
@@ -442,14 +445,34 @@ export default function Footer() {
 
         @media (max-width: 480px) {
           .footer-main {
-            width: min(100% - 30px, 620px);
-            grid-template-columns: 1fr;
-            gap: 34px;
+            width: calc(100% - 30px);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            column-gap: 12px;
+            row-gap: 30px;
           }
 
-          .footer-brand,
+          .footer-brand {
+            grid-column: 1 / -1;
+          }
+
+          .footer-column h3 {
+            font-size: 10px;
+            letter-spacing: 0.09em;
+            margin-bottom: 18px;
+            white-space: nowrap;
+          }
+
+          .footer-column nav {
+            gap: 14px;
+          }
+
+          .footer-column nav a {
+            font-size: 12px;
+            line-height: 1.6;
+          }
+
           .contact-column {
-            grid-column: auto;
+            grid-column: 1 / -1;
           }
 
           .footer-description {
@@ -457,11 +480,21 @@ export default function Footer() {
           }
 
           .footer-bottom {
-            width: min(100% - 30px, 620px);
+            width: calc(100% - 30px);
           }
 
           .travel-more {
             display: none;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .site-footer *,
+          .site-footer *::before,
+          .site-footer *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
           }
         }
       `}</style>
