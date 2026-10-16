@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Hotel = {
+  id: string;
+  slug: string;
   name: string;
   location: string;
   region: string;
@@ -14,140 +17,269 @@ type Hotel = {
   rating: string;
   reviews: string;
   tags: string[];
-  featured?: boolean;
+  featured: boolean;
 };
 
-const hotels: Hotel[] = [
-  {
-    name: "Lemontree Hotel",
-    location: "Srinagar, Kashmir",
-    region: "Kashmir",
-    type: "Boutique Stay",
-    description:
-      "A peaceful valley retreat surrounded by gardens, mountain views and the quiet beauty of Kashmir.",
-    image: "/images/hotel-kashmir.jpg",
-    price: "₹8,500",
-    rating: "4.8",
-    reviews: "124 reviews",
-    tags: ["Mountain View", "Breakfast", "Wi-Fi"],
-    featured: true,
-  },
-  {
-    name: "Himalayan Retreat",
-    location: "Manali, Himachal Pradesh",
-    region: "Manali",
-    type: "Mountain Resort",
-    description:
-      "A refined mountain escape designed for slow mornings, crisp air and unforgettable Himalayan views.",
-    image: "/images/hotel-manali.jpg",
-    price: "₹7,200",
-    rating: "4.7",
-    reviews: "96 reviews",
-    tags: ["Valley View", "Restaurant", "Parking"],
-  },
-  {
-    name: "Casa Sol",
-    location: "North Goa, Goa",
-    region: "Goa",
-    type: "Beach Resort",
-    description:
-      "A relaxed coastal stay close to Goa's beaches, cafés and the easy rhythm of island life.",
-    image: "/images/hotel-goa.jpg",
-    price: "₹6,900",
-    rating: "4.6",
-    reviews: "158 reviews",
-    tags: ["Pool", "Beach Access", "Breakfast"],
-  },
-  {
-    name: "The Royal Haveli",
-    location: "Jaipur, Rajasthan",
-    region: "Rajasthan",
-    type: "Heritage Hotel",
-    description:
-      "A character-filled heritage stay bringing together traditional architecture and modern comfort.",
-    image: "/images/hotel-rajasthan.jpg",
-    price: "₹9,800",
-    rating: "4.9",
-    reviews: "87 reviews",
-    tags: ["Heritage", "Restaurant", "Pool"],
-  },
-  {
-    name: "Snowline Lodge",
-    location: "Leh, Ladakh",
-    region: "Ladakh",
-    type: "Mountain Lodge",
-    description:
-      "A warm and comfortable base for exploring the dramatic landscapes of Ladakh.",
-    image: "/images/hotel-ladakh.jpg",
-    price: "₹5,900",
-    rating: "4.7",
-    reviews: "72 reviews",
-    tags: ["Mountain View", "Heating", "Restaurant"],
-  },
-  {
-    name: "The Valley Manor",
-    location: "Pahalgam, Kashmir",
-    region: "Kashmir",
-    type: "Luxury Stay",
-    description:
-      "An intimate property surrounded by pine forests, open landscapes and the sound of the valley.",
-    image: "/images/hotel-pahalgam.jpg",
-    price: "₹10,500",
-    rating: "4.9",
-    reviews: "61 reviews",
-    tags: ["River View", "Breakfast", "Spa"],
-  },
-];
+type DestinationRow = {
+  id: string;
+  name: string;
+  country: string | null;
+  region: string | null;
+};
 
-const regions = [
-  "All destinations",
-  "Kashmir",
-  "Manali",
-  "Goa",
-  "Rajasthan",
-  "Ladakh",
-];
+type HotelRow = {
+  id: string;
+  destination_id: string | null;
+  name: string;
+  slug: string;
+  description: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  star_rating: number | null;
+  hero_image: string | null;
+  amenities: string[] | null;
+  is_featured: boolean;
+  is_active: boolean;
+};
 
-const propertyTypes = [
-  "All property types",
-  "Boutique Stay",
-  "Mountain Resort",
-  "Beach Resort",
-  "Heritage Hotel",
-  "Mountain Lodge",
-  "Luxury Stay",
-];
+type RoomRow = {
+  id: string;
+  hotel_id: string;
+  name: string;
+  base_price_usd: number | string;
+  is_active: boolean;
+};
+
+const formatUSD = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
 
 export default function HotelsPage() {
-  const [selectedRegion, setSelectedRegion] =
-    useState("All destinations");
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState("All destinations");
+  const [selectedType, setSelectedType] = useState("All property types");
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const [selectedType, setSelectedType] =
-    useState("All property types");
+  const loadHotels = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+    const [hotelResult, destinationResult, roomResult] = await Promise.all([
+      supabase
+        .from("hotels")
+        .select("id,destination_id,name,slug,description,address,city,country,star_rating,hero_image,amenities,is_featured,is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("destinations")
+        .select("id,name,country,region")
+        .eq("is_active", true),
+      supabase
+        .from("hotel_rooms")
+        .select("id,hotel_id,name,base_price_usd,is_active")
+        .eq("is_active", true)
+        .order("base_price_usd", { ascending: true }),
+    ]);
 
-  const [mobileMenu, setMobileMenu] =
-    useState(false);
+    if (hotelResult.error) {
+      setLoadError(`Hotels could not be loaded: ${hotelResult.error.message}`);
+      setHotels([]);
+      setLoading(false);
+      return;
+    }
+    if (destinationResult.error) {
+      setLoadError(`Destinations could not be loaded: ${destinationResult.error.message}`);
+      setHotels([]);
+      setLoading(false);
+      return;
+    }
+    if (roomResult.error) {
+      setLoadError(`Hotel room prices could not be loaded: ${roomResult.error.message}`);
+      setHotels([]);
+      setLoading(false);
+      return;
+    }
 
-  const filteredHotels = useMemo(() => {
-    return hotels.filter((hotel) => {
-      const regionMatch =
-        selectedRegion === "All destinations" ||
-        hotel.region === selectedRegion;
+    const destinations = (destinationResult.data ?? []) as DestinationRow[];
+    const destinationById = new Map(destinations.map((destination) => [destination.id, destination]));
+    const rooms = (roomResult.data ?? []) as RoomRow[];
+    const roomsByHotel = new Map<string, RoomRow[]>();
+    for (const room of rooms) {
+      const list = roomsByHotel.get(room.hotel_id) ?? [];
+      list.push(room);
+      roomsByHotel.set(room.hotel_id, list);
+    }
 
-      const typeMatch =
-        selectedType === "All property types" ||
-        hotel.type === selectedType;
-
-      return regionMatch && typeMatch;
+    const mapped = ((hotelResult.data ?? []) as HotelRow[]).map((hotel) => {
+      const destination = hotel.destination_id ? destinationById.get(hotel.destination_id) : undefined;
+      const hotelRooms = roomsByHotel.get(hotel.id) ?? [];
+      const lowestPrice = hotelRooms.length ? Number(hotelRooms[0].base_price_usd) : null;
+      const amenities = Array.isArray(hotel.amenities) ? hotel.amenities.filter(Boolean).slice(0, 4) : [];
+      const locationParts = [hotel.city, hotel.country || destination?.country].filter(Boolean);
+      return {
+        id: hotel.id,
+        slug: hotel.slug,
+        name: hotel.name,
+        location: locationParts.length ? locationParts.join(", ") : destination?.name || hotel.address || "Location not specified",
+        region: destination?.name || destination?.region || hotel.city || "Other",
+        type: hotel.star_rating ? `${Number(hotel.star_rating)}-Star Hotel` : "Hotel",
+        description: hotel.description || "Discover a comfortable stay with Hikinhigh Travels.",
+        image: hotel.hero_image || "/images/hotel-kashmir.jpg",
+        price: lowestPrice !== null && Number.isFinite(lowestPrice) ? formatUSD(lowestPrice) : "Price on request",
+        rating: hotel.star_rating ? Number(hotel.star_rating).toFixed(1) : "—",
+        reviews: "Guest rating",
+        tags: amenities.length ? amenities : ["Comfortable stay"],
+        featured: Boolean(hotel.is_featured),
+      } satisfies Hotel;
     });
-  }, [selectedRegion, selectedType]);
+    setHotels(mapped);
+    setLoading(false);
+  }, []);
 
-  const featuredHotel =
-    hotels.find((hotel) => hotel.featured) ?? hotels[0];
+  useEffect(() => { void loadHotels(); }, [loadHotels]);
+
+  const regions = useMemo(
+    () => ["All destinations", ...Array.from(new Set(hotels.map((hotel) => hotel.region))).sort()],
+    [hotels],
+  );
+  const propertyTypes = useMemo(
+    () => ["All property types", ...Array.from(new Set(hotels.map((hotel) => hotel.type))).sort()],
+    [hotels],
+  );
+  const filteredHotels = useMemo(() => hotels.filter((hotel) => {
+    const regionMatch = selectedRegion === "All destinations" || hotel.region === selectedRegion;
+    const typeMatch = selectedType === "All property types" || hotel.type === selectedType;
+    return regionMatch && typeMatch;
+  }), [hotels, selectedRegion, selectedType]);
+  const featuredHotel = hotels.find((hotel) => hotel.featured) ?? hotels[0] ?? null;
 
   return (
     <main className="hotels-page">
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
+      <header className="hotels-header">
+        <div className="hotels-header-inner">
+          <Link href="/" className="hotels-brand">
+            <span className="hotels-brand-mark">H</span>
+
+            <span className="hotels-brand-copy">
+              <strong>hikinhigh</strong>
+              <small>travels</small>
+            </span>
+          </Link>
+
+          <nav className="hotels-desktop-nav">
+            <Link href="/destinations">
+              Destinations
+            </Link>
+
+            <Link
+              href="/hotels"
+              className="hotels-nav-active"
+            >
+              Hotels
+            </Link>
+
+            <Link href="/packages">
+              Packages
+            </Link>
+
+            <Link href="/adventures">
+              Adventures
+            </Link>
+
+            <Link href="/about">
+              About
+            </Link>
+          </nav>
+
+          <div className="hotels-header-actions">
+            <Link
+              href="/login"
+              className="hotels-login-link"
+            >
+              Login
+            </Link>
+
+            <Link
+              href="/register"
+              className="hotels-header-button"
+            >
+              Join us
+            </Link>
+          </div>
+
+          <button
+            type="button"
+            className="hotels-mobile-button"
+            onClick={() =>
+              setMobileMenu((value) => !value)
+            }
+            aria-label="Open navigation"
+          >
+            {mobileMenu ? "×" : "☰"}
+          </button>
+        </div>
+
+        {mobileMenu && (
+          <div className="hotels-mobile-menu">
+            <Link
+              href="/destinations"
+              onClick={() => setMobileMenu(false)}
+            >
+              Destinations
+            </Link>
+
+            <Link
+              href="/hotels"
+              onClick={() => setMobileMenu(false)}
+            >
+              Hotels
+            </Link>
+
+            <Link
+              href="/packages"
+              onClick={() => setMobileMenu(false)}
+            >
+              Packages
+            </Link>
+
+            <Link
+              href="/adventures"
+              onClick={() => setMobileMenu(false)}
+            >
+              Adventures
+            </Link>
+
+            <Link
+              href="/about"
+              onClick={() => setMobileMenu(false)}
+            >
+              About
+            </Link>
+
+            <div className="hotels-mobile-divider" />
+
+            <Link href="/login">
+              Login
+            </Link>
+
+            <Link
+              href="/register"
+              className="hotels-mobile-join"
+            >
+              Join Hikinhigh
+            </Link>
+          </div>
+        )}
+      </header>
 
       {/* =====================================================
           HERO
@@ -306,7 +438,7 @@ export default function HotelsPage() {
           FEATURED HOTEL
       ===================================================== */}
 
-      <section className="hotels-featured">
+      {featuredHotel && <section className="hotels-featured">
         <div className="hotels-container">
           <div className="hotels-featured-card">
             <div className="hotels-featured-image">
@@ -364,7 +496,7 @@ export default function HotelsPage() {
               </div>
 
               <Link
-                href="/hotels/the-orchard-house"
+                href={`/hotels/${featuredHotel.slug}`}
                 className="hotels-primary-button"
               >
                 View property
@@ -373,7 +505,7 @@ export default function HotelsPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* =====================================================
           HOTEL COLLECTION
@@ -394,21 +526,32 @@ export default function HotelsPage() {
             </div>
 
             <p>
-              Browse our growing collection of
-              handpicked stays across some of
-              India's most loved destinations.
+              Browse currently available properties added to the Hikinhigh collection.
             </p>
           </div>
 
-          {filteredHotels.length > 0 ? (
+          {loadError ? (
+            <div className="hotels-empty">
+              <span>UNABLE TO LOAD STAYS</span>
+              <h3>We couldn't load hotels right now.</h3>
+              <p>{loadError}</p>
+              <button type="button" onClick={() => void loadHotels()}>Try again</button>
+            </div>
+          ) : loading ? (
+            <div className="hotels-empty">
+              <span>LOADING STAYS</span>
+              <h3>Finding your next stay…</h3>
+              <p>Loading currently available hotels.</p>
+            </div>
+          ) : filteredHotels.length > 0 ? (
             <div className="hotels-grid">
               {filteredHotels.map((hotel) => (
                 <article
-                  key={hotel.name}
+                  key={hotel.id}
                   className="hotel-card"
                 >
                   <Link
-                    href="/hotels"
+                    href={`/hotels/${hotel.slug}`}
                     className="hotel-card-image"
                   >
                     <img
@@ -474,7 +617,7 @@ export default function HotelsPage() {
                       </div>
 
                       <Link
-                        href="/hotels"
+                        href={`/hotels/${hotel.slug}`}
                         className="hotel-view-link"
                       >
                         View stay
@@ -644,7 +787,113 @@ export default function HotelsPage() {
         </div>
       </section>
 
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
+      <footer className="hotels-footer">
+        <div className="hotels-container">
+          <div className="hotels-footer-grid">
+            <div className="hotels-footer-brand">
+              <Link
+                href="/"
+                className="hotels-brand hotels-brand-footer"
+              >
+                <span className="hotels-brand-mark">
+                  H
+                </span>
+
+                <span className="hotels-brand-copy">
+                  <strong>
+                    hikinhigh
+                  </strong>
+
+                  <small>
+                    travels
+                  </small>
+                </span>
+              </Link>
+
+              <p>
+                Beautiful stays, unforgettable
+                journeys and experiences worth
+                travelling for.
+              </p>
+            </div>
+
+            <FooterColumn
+              title="Explore"
+              links={[
+                [
+                  "Destinations",
+                  "/destinations",
+                ],
+                ["Hotels", "/hotels"],
+                ["Tour Packages", "/packages"],
+                [
+                  "Adventures",
+                  "/adventures",
+                ],
+              ]}
+            />
+
+            <FooterColumn
+              title="Company"
+              links={[
+                ["About Us", "/about"],
+                ["Contact", "/contact"],
+                [
+                  "Privacy Policy",
+                  "/privacy-policy",
+                ],
+                [
+                  "Terms & Conditions",
+                  "/terms-conditions",
+                ],
+              ]}
+            />
+
+            <div className="hotels-footer-contact">
+              <h4>
+                Contact
+              </h4>
+
+              <a href="mailto:info@hikinhigh.com">
+                info@hikinhigh.com
+              </a>
+
+              <a href="tel:+919990601105">
+                +91 999-060-1105
+              </a>
+
+              <div className="hotels-social-links">
+                <a href="#">
+                  IG
+                </a>
+
+                <a href="#">
+                  FB
+                </a>
+
+                <a href="#">
+                  IN
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="hotels-footer-bottom">
+            <span>
+              © {new Date().getFullYear()} Hikinhigh
+              Travels
+            </span>
+
+            <span>
+              Travel further. Experience more.
+            </span>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

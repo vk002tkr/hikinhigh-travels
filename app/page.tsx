@@ -1,7 +1,76 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { useCurrency } from "../components/providers/CurrencyProvider";
+
+type HomeCruise = {
+  id: string;
+  name: string;
+  slug: string;
+  cruise_line: string;
+  destination: string;
+  departure_port: string | null;
+  departure_date: string | null;
+  return_date: string | null;
+  duration_nights: number | null;
+  price_from: number;
+  currency: string;
+  short_description: string | null;
+  cover_image_url: string | null;
+  featured: boolean;
+};
+
+
+type HomeDestination = {
+  id: string;
+  name: string;
+  slug: string;
+  country: string | null;
+  region: string | null;
+  short_description: string | null;
+  description: string | null;
+  hero_image: string | null;
+  is_featured: boolean;
+};
+
+type HomeHotel = {
+  id: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  country: string | null;
+  description: string | null;
+  hero_image: string | null;
+  star_rating: number | null;
+  is_featured: boolean;
+};
+
+type HomePackage = {
+  id: string;
+  name: string;
+  slug: string;
+  short_description: string | null;
+  duration_days: number | null;
+  duration_nights: number | null;
+  base_price_usd: number;
+  hero_image: string | null;
+  is_featured: boolean;
+  destination_id: string | null;
+};
+
+type HomeExperience = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string | null;
+  short_description: string | null;
+  hero_image: string | null;
+  is_featured: boolean;
+};
+
+const fallbackImage = "/images/destination-kashmir.jpg";
 
 type HeroSlide = {
   location: string;
@@ -13,133 +82,44 @@ type HeroSlide = {
 
 const heroSlides: HeroSlide[] = [
   {
-    location: "Mountain Escapes · Worldwide",
-    title: "Go where the world",
-    accent: "feels bigger.",
+    location: "Ocean Voyages · Worldwide",
+    title: "The world is better",
+    accent: "from the sea.",
     description:
-      "Discover remarkable landscapes, beautiful stays and journeys designed around the way you want to travel.",
-    image: "/images/hero-kashmir.jpg",
+      "Discover extraordinary cruise holidays, breathtaking coastlines and unforgettable days at sea.",
+    image: "https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&w=2200&q=85",
   },
   {
-    location: "Coastal Retreats · Worldwide",
-    title: "Slow mornings,",
-    accent: "endless horizons.",
+    location: "Island Hopping · Beyond Ordinary",
+    title: "Wake up somewhere",
+    accent: "wonderful.",
     description:
-      "Find sun-soaked coastlines, island escapes and stays made for switching off and staying awhile.",
+      "Unpack once and explore beautiful ports, sunlit islands and new horizons on every sailing.",
+    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=2200&q=85",
+  },
+  {
+    location: "Life On Board · All Aboard",
+    title: "Make the journey",
+    accent: "the destination.",
+    description:
+      "From relaxing days on deck to memorable shore excursions, your next story starts on board.",
+    image: "https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=2200&q=85",
+  },
+  {
+    location: "Coastal Discoveries · Worldwide",
+    title: "Find your own",
+    accent: "blue horizon.",
+    description:
+      "Explore cruise holidays made for curious travellers, beautiful places and moments worth keeping.",
     image: "/images/hero-goa.jpg",
   },
   {
-    location: "Wild Escapes · Worldwide",
-    title: "Leave the ordinary,",
-    accent: "find the wild.",
+    location: "Your Next Voyage · Hikinhigh",
+    title: "Leave ordinary",
+    accent: "far behind.",
     description:
-      "From dramatic landscapes to unforgettable outdoor experiences, make room for something different.",
-    image: "/images/hero-ladakh.jpg",
-  },
-  {
-    location: "Heritage Journeys · Worldwide",
-    title: "Travel through places",
-    accent: "with a story.",
-    description:
-      "Explore architecture, culture, food and timeless destinations through thoughtfully designed journeys.",
-    image: "/images/hero-rajasthan.jpg",
-  },
-  {
-    location: "Mountain Retreats · Worldwide",
-    title: "Take the road",
-    accent: "less travelled.",
-    description:
-      "Trade familiar routines for mountain air, quiet valleys and experiences worth remembering.",
-    image: "/images/hero-manali.jpg",
-  },
-];
-
-const destinations = [
-  {
-    name: "Mountain Escapes",
-    country: "Alpine & highland journeys",
-    image: "/images/destination-kashmir.jpg",
-  },
-  {
-    name: "Coastal Retreats",
-    country: "Beaches & island escapes",
-    image: "/images/destination-goa.jpg",
-  },
-  {
-    name: "Heritage Routes",
-    country: "Culture, history & design",
-    image: "/images/destination-rajasthan.jpg",
-  },
-  {
-    name: "Wild Landscapes",
-    country: "Nature & outdoor adventures",
-    image: "/images/destination-manali.jpg",
-  },
-];
-
-const services = [
-  {
-    number: "01",
-    title: "Stays",
-    text: "Discover hotels, resorts and beautiful places to stay, from city hideaways to remote retreats.",
-    image: "/images/service-hotels.jpg",
-    href: "/hotels",
-  },
-  {
-    number: "02",
-    title: "Journeys",
-    text: "Explore thoughtfully planned trips that bring destinations, accommodation and experiences together.",
-    image: "/images/service-packages.jpg",
-    href: "/packages",
-  },
-  {
-    number: "03",
-    title: "Experiences",
-    text: "Add something memorable to your trip with adventures, culture, nature and experiences around the world.",
-    image: "/images/service-adventure.jpg",
-    href: "/adventures",
-  },
-];
-
-const packages = [
-  {
-    title: "Alpine Escape",
-    location: "Mountains · Lakes · Villages",
-    duration: "7 Days / 6 Nights",
-    price: 899,
-    image: "/images/package-kashmir.jpg",
-  },
-  {
-    title: "Coastal Escape",
-    location: "Beaches · Islands · Sunsets",
-    duration: "6 Days / 5 Nights",
-    price: 749,
-    image: "/images/package-goa.jpg",
-  },
-  {
-    title: "Heritage Route",
-    location: "Cities · Culture · Architecture",
-    duration: "8 Days / 7 Nights",
-    price: 999,
-    image: "/images/package-rajasthan.jpg",
-  },
-];
-
-const adventures = [
-  {
-    title: "Trekking",
-    category: "Mountain Experiences",
-    image: "/images/adventure-trekking.jpg",
-  },
-  {
-    title: "Water Adventures",
-    category: "Water Experiences",
-    image: "/images/adventure-rafting.jpg",
-  },
-  {
-    title: "Camping",
-    category: "Nature Experiences",
-    image: "/images/adventure-camping.jpg",
+      "Browse sailings, compare your options and let the sea lead you somewhere extraordinary.",
+    image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=85",
   },
 ];
 
@@ -147,13 +127,118 @@ export default function Home() {
   const [activeSlide, setActiveSlide] =
     useState(0);
 
-  const [activeSearch, setActiveSearch] =
-    useState("Stays");
+  const [activeSearch, setActiveSearch] = useState("Cruises");
+  const [searchDestination, setSearchDestination] = useState("");
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
+  const [travellers, setTravellers] = useState("2");
+  const [bookingError, setBookingError] = useState("");
+
+  const [cruises, setCruises] = useState<HomeCruise[]>([]);
+  const [cruisesLoading, setCruisesLoading] = useState(true);
+  const [cruisesError, setCruisesError] = useState("");
+  const [destinations, setDestinations] = useState<HomeDestination[]>([]);
+  const [hotels, setHotels] = useState<HomeHotel[]>([]);
+  const [packages, setPackages] = useState<HomePackage[]>([]);
+  const [adventures, setAdventures] = useState<HomeExperience[]>([]);
+  const [contentLoading, setContentLoading] = useState(true);
+  const [contentError, setContentError] = useState("");
 
   const {
     formatPrice,
     currency,
   } = useCurrency();
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadHomepageContent() {
+      setContentLoading(true);
+      setContentError("");
+
+      const [destinationResult, hotelResult, packageResult, experienceResult] = await Promise.all([
+        supabase
+          .from("destinations")
+          .select("id, name, slug, country, region, short_description, description, hero_image, is_featured")
+          .eq("is_active", true)
+          .order("is_featured", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .limit(4),
+        supabase
+          .from("hotels")
+          .select("id, name, slug, city, country, description, hero_image, star_rating, is_featured")
+          .eq("is_active", true)
+          .order("is_featured", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(3),
+        supabase
+          .from("packages")
+          .select("id, name, slug, short_description, duration_days, duration_nights, base_price_usd, hero_image, is_featured, destination_id")
+          .eq("is_active", true)
+          .order("is_featured", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .limit(3),
+        supabase
+          .from("experiences")
+          .select("id, name, slug, category, short_description, hero_image, is_featured")
+          .eq("is_active", true)
+          .order("is_featured", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .limit(3),
+      ]);
+
+      if (!mounted) return;
+
+      const errors = [destinationResult.error, hotelResult.error, packageResult.error, experienceResult.error].filter(Boolean);
+      if (errors.length) {
+        console.error("Homepage content load warning:", errors.map((error) => error?.message));
+        setContentError("Some travel collections could not be loaded. Please check the catalogue pages.");
+      }
+
+      setDestinations((destinationResult.data ?? []) as HomeDestination[]);
+      setHotels((hotelResult.data ?? []) as HomeHotel[]);
+      setPackages((packageResult.data ?? []) as HomePackage[]);
+      setAdventures((experienceResult.data ?? []) as HomeExperience[]);
+      setContentLoading(false);
+    }
+
+    void loadHomepageContent();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPublishedCruises() {
+      const { data, error } = await supabase
+        .from("cruises")
+        .select(
+          "id, name, slug, cruise_line, destination, departure_port, departure_date, return_date, duration_nights, price_from, currency, short_description, cover_image_url, featured"
+        )
+        .eq("status", "published")
+        .order("featured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (!mounted) return;
+
+      if (error) {
+        console.error("Homepage cruise catalogue load failed:", error.message);
+        setCruisesError("Cruises are temporarily unavailable. Please visit the cruise catalogue.");
+        setCruises([]);
+      } else {
+        setCruises((data ?? []) as HomeCruise[]);
+      }
+
+      setCruisesLoading(false);
+    }
+
+    void loadPublishedCruises();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -189,6 +274,7 @@ export default function Home() {
 
   return (
     <main className="site-shell">
+      {contentError && <p role="status" style={{ padding: "10px 24px", textAlign: "center", color: "#64748b", fontSize: 13 }}>{contentError}</p>}
       {/* =====================================================
           HERO
       ===================================================== */}
@@ -239,17 +325,17 @@ export default function Home() {
 
             <div className="hero-buttons">
               <a
-                href="/packages"
+                href="/cruises"
                 className="primary-button"
               >
-                Explore journeys
+                Explore cruises
               </a>
 
               <a
-                href="/adventures"
+                href="#cruises"
                 className="secondary-button"
               >
-                Discover experiences
+                Discover sailings
               </a>
             </div>
           </div>
@@ -311,69 +397,18 @@ export default function Home() {
           )}
         </div>
 
-        {/* MOBILE BOOKING SEARCH: shown in the blank space below the hero copy */}
-        <div className="booking-wrapper booking-wrapper-mobile">
-          <div className="booking-box">
-            <div className="booking-tabs">
-              {["Stays", "Journeys", "Experiences"].map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={activeSearch === item ? "tab-active" : ""}
-                  onClick={() => setActiveSearch(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
 
-            <div className="booking-fields">
-              <BookingField label="Destination" value="Where are you going?" />
-              <BookingField label="Check in" value="Add dates" />
-              <BookingField label="Check out" value="Add dates" />
-              <BookingField label="Travellers" value="2 Guests" />
-              <button
-                type="button"
-                className="search-button"
-                onClick={() => {
-                  if (activeSearch === "Stays") {
-                    window.location.href = "/hotels";
-                  } else if (activeSearch === "Journeys") {
-                    window.location.href = "/packages";
-                  } else {
-                    window.location.href = "/adventures";
-                  }
-                }}
-              >
-                Search
-              </button>
-            </div>
-          </div>
-        </div>
 
       </section>
 
-      {/* INTRO */}
+      {/* BOOKING SEARCH: always directly below the hero */}
+      {/* BOOKING SEARCH */}
 
-      <section
-        id="about"
-        className="intro-section"
-      >
-        {/* BOOKING SEARCH */}
-
-        <div
-          className="booking-wrapper intro-booking-wrapper booking-wrapper-desktop"
-          style={{
-            position: "relative",
-            inset: "auto",
-            width: "min(1240px, calc(100% - 48px))",
-            margin: "-80px auto 80px",
-            zIndex: 3,
-          }}
-        >
+        <div className="booking-wrapper home-booking-wrapper">
           <div className="booking-box">
             <div className="booking-tabs">
               {[
+                "Cruises",
                 "Stays",
                 "Journeys",
                 "Experiences",
@@ -395,55 +430,208 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="booking-fields">
-              <BookingField
-                label="Destination"
-                value="Where are you going?"
-              />
+            <form
+              className="booking-fields"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setBookingError("");
 
-              <BookingField
-                label="Check in"
-                value="Add dates"
-              />
+                if (checkInDate && checkOutDate && checkOutDate < checkInDate) {
+                  setBookingError("Check-out date must be on or after check-in date.");
+                  return;
+                }
 
-              <BookingField
-                label="Check out"
-                value="Add dates"
-              />
+                const destinationPath =
+                  activeSearch === "Cruises"
+                    ? "/cruises"
+                    : activeSearch === "Stays"
+                      ? "/hotels"
+                      : activeSearch === "Journeys"
+                        ? "/packages"
+                        : "/adventures";
 
-              <BookingField
-                label="Travellers"
-                value="2 Guests"
-              />
+                const params = new URLSearchParams();
+                if (searchDestination.trim()) params.set("destination", searchDestination.trim());
+                if (checkInDate) params.set("checkIn", checkInDate);
+                if (checkOutDate) params.set("checkOut", checkOutDate);
+                params.set("travellers", travellers);
 
-              <button
-                type="button"
-                className="search-button"
-                onClick={() => {
-                  if (
-                    activeSearch ===
-                    "Stays"
-                  ) {
-                    window.location.href =
-                      "/hotels";
-                  } else if (
-                    activeSearch ===
-                    "Journeys"
-                  ) {
-                    window.location.href =
-                      "/packages";
-                  } else {
-                    window.location.href =
-                      "/adventures";
-                  }
-                }}
-              >
-                Search
-              </button>
-            </div>
+                window.location.href = `${destinationPath}?${params.toString()}`;
+              }}
+            >
+              <div className="booking-field booking-input-field">
+                <label htmlFor="booking-destination">Destination</label>
+                <input
+                  id="booking-destination"
+                  type="text"
+                  list="booking-destination-options"
+                  value={searchDestination}
+                  onChange={(event) => setSearchDestination(event.target.value)}
+                  placeholder="Where are you going?"
+                  autoComplete="off"
+                />
+                <datalist id="booking-destination-options">
+                  {destinations.map((destination) => (
+                    <option key={destination.id} value={destination.name} />
+                  ))}
+                  {hotels.map((hotel) => (
+                    <option key={`hotel-${hotel.id}`} value={hotel.city || hotel.name} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="booking-field booking-input-field">
+                <label htmlFor="booking-check-in">Check in</label>
+                <input
+                  id="booking-check-in"
+                  type="date"
+                  value={checkInDate}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={(event) => {
+                    setCheckInDate(event.target.value);
+                    if (checkOutDate && event.target.value && checkOutDate < event.target.value) {
+                      setCheckOutDate("");
+                    }
+                    setBookingError("");
+                  }}
+                />
+              </div>
+
+              <div className="booking-field booking-input-field">
+                <label htmlFor="booking-check-out">Check out</label>
+                <input
+                  id="booking-check-out"
+                  type="date"
+                  value={checkOutDate}
+                  min={checkInDate || new Date().toISOString().slice(0, 10)}
+                  onChange={(event) => {
+                    setCheckOutDate(event.target.value);
+                    setBookingError("");
+                  }}
+                />
+              </div>
+
+              <div className="booking-field booking-input-field">
+                <label htmlFor="booking-travellers">Travellers</label>
+                <select
+                  id="booking-travellers"
+                  value={travellers}
+                  onChange={(event) => setTravellers(event.target.value)}
+                >
+                  <option value="1">1 Guest</option>
+                  <option value="2">2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5 Guests</option>
+                  <option value="6">6 Guests</option>
+                  <option value="7">7 Guests</option>
+                  <option value="8">8 Guests</option>
+                  <option value="9">9 Guests</option>
+                  <option value="10">10 Guests</option>
+                </select>
+              </div>
+
+              <button type="submit" className="search-button">Search</button>
+              {bookingError && (
+                <p className="booking-search-error" role="alert">{bookingError}</p>
+              )}
+            </form>
           </div>
         </div>
 
+      {/* CRUISES */}
+
+      <section id="cruises" className="home-cruises-section">
+        <div className="content-width">
+          <div className="home-cruises-heading">
+            <div>
+              <span className="eyebrow">Sail somewhere extraordinary</span>
+              <h2>Discover your next <em>cruise.</em></h2>
+              <p>
+                From unforgettable ocean voyages to beautiful destinations,
+                find a sailing that makes the journey part of the adventure.
+              </p>
+            </div>
+            <Link href="/cruises" className="home-cruises-view-all">
+              Explore all cruises <span>↗</span>
+            </Link>
+          </div>
+
+          {cruisesLoading ? (
+            <div className="home-cruises-message" aria-live="polite">
+              Discovering available cruises…
+            </div>
+          ) : cruisesError ? (
+            <div className="home-cruises-message" role="status">
+              {cruisesError}
+              <Link href="/cruises">View cruise catalogue →</Link>
+            </div>
+          ) : cruises.length === 0 ? (
+            <div className="home-cruises-empty">
+              <div>
+                <span className="home-cruises-empty-eyebrow">THE OPEN SEA IS CALLING</span>
+                <h3>Your next great journey starts here.</h3>
+                <p>Explore our cruise catalogue and discover upcoming sailings.</p>
+              </div>
+              <Link href="/cruises" className="home-cruises-cta">
+                Explore cruises <span>→</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="home-cruise-grid">
+              {cruises.map((cruise, index) => (
+                <Link
+                  href={`/cruises#cruise-${cruise.slug}`}
+                  key={cruise.id}
+                  className={`home-cruise-card ${index === 0 ? "home-cruise-card-featured" : ""}`}
+                >
+                  <div className="home-cruise-image">
+                    <img
+                      src={cruise.cover_image_url || "/images/hero-goa.jpg"}
+                      alt={`${cruise.name} cruise`}
+                      loading="lazy"
+                    />
+                    <div className="home-cruise-image-overlay" />
+                    {cruise.featured && (
+                      <span className="home-cruise-featured-label">Featured sailing</span>
+                    )}
+                    <span className="home-cruise-line">{cruise.cruise_line}</span>
+                  </div>
+                  <div className="home-cruise-details">
+                    <span className="home-cruise-destination">{cruise.destination}</span>
+                    <h3>{cruise.name}</h3>
+                    {cruise.short_description && (
+                      <p>{cruise.short_description}</p>
+                    )}
+                    <div className="home-cruise-meta">
+                      <span>
+                        {cruise.duration_nights
+                          ? `${cruise.duration_nights} nights`
+                          : cruise.departure_port || "Dates on request"}
+                      </span>
+                      <span className="home-cruise-price">
+                        <small>From</small>
+                        {formatCruiseMoney(cruise.price_from, cruise.currency)}
+                      </span>
+                    </div>
+                    <div className="home-cruise-card-link">
+                      Explore cruise <span>↗</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+
+      {/* INTRO */}
+
+      <section
+        id="about"
+        className="intro-section"
+      >
         <div className="content-width intro-grid">
           <div>
             <span className="eyebrow">
@@ -501,9 +689,7 @@ export default function Home() {
               ) => (
                 <a
                   href="/destinations"
-                  key={
-                    destination.name
-                  }
+                  key={destination.id}
                   className={`destination-card ${
                     index % 2 === 1
                       ? "destination-offset"
@@ -511,21 +697,15 @@ export default function Home() {
                   }`}
                 >
                   <img
-                    src={
-                      destination.image
-                    }
-                    alt={
-                      destination.name
-                    }
+                    src={destination.hero_image || fallbackImage}
+                    alt={destination.name}
                   />
 
                   <div className="destination-overlay" />
 
                   <div className="destination-content">
                     <span>
-                      {
-                        destination.country
-                      }
+                      {destination.country || destination.region || destination.short_description || "Explore destination"}
                     </span>
 
                     <h3>
@@ -540,6 +720,9 @@ export default function Home() {
                   </div>
                 </a>
               )
+            )}
+            {!contentLoading && destinations.length === 0 && (
+              <p style={{ gridColumn: "1 / -1", padding: "24px 0", color: "#64748b" }} className="homepage-empty-state">Destinations are being updated. Please check back soon.</p>
             )}
           </div>
         </div>
@@ -559,23 +742,18 @@ export default function Home() {
           />
 
           <div className="service-grid">
-            {services.map(
-              (service) => (
-                <ServiceCard
-                  key={service.title}
-                  number={
-                    service.number
-                  }
-                  title={
-                    service.title
-                  }
-                  text={service.text}
-                  image={
-                    service.image
-                  }
-                  href={service.href}
-                />
-              )
+            {hotels.map((hotel, index) => (
+              <ServiceCard
+                key={hotel.id}
+                number={String(index + 1).padStart(2, "0")}
+                title={hotel.name}
+                text={[hotel.city, hotel.country].filter(Boolean).join(", ") || hotel.description || "Discover this stay with Hikinhigh Travels."}
+                image={hotel.hero_image || "/images/service-hotels.jpg"}
+                href="/hotels"
+              />
+            ))}
+            {!contentLoading && hotels.length === 0 && (
+              <p style={{ gridColumn: "1 / -1", padding: "24px 0", color: "#64748b" }} className="homepage-empty-state">New stays are being added. Please check back soon.</p>
             )}
           </div>
         </div>
@@ -600,35 +778,31 @@ export default function Home() {
               (pkg, index) => (
                 <a
                   href="/packages"
-                  key={pkg.title}
+                  key={pkg.id}
                   className={`home-package-card ${
                     index === 0
                       ? "home-package-card-featured"
                       : ""
                   }`}
-                  aria-label={`View ${pkg.title}`}
+                  aria-label={`View ${pkg.name}`}
                 >
                   <div className="home-package-image">
                     <img
-                      src={pkg.image}
-                      alt={pkg.title}
+                      src={pkg.hero_image || "/images/service-packages.jpg"}
+                      alt={pkg.name}
                     />
 
                     <span className="home-package-label">
-                      {index === 0
-                        ? "Featured journey"
-                        : pkg.location.split(
-                            " · "
-                          )[0]}
+                      {pkg.is_featured ? "Featured journey" : "Curated journey"}
                     </span>
 
                     <div className="home-package-image-bottom">
                       <span>
-                        {pkg.location}
+                        {destinations.find((destination) => destination.id === pkg.destination_id)?.name || "Discover the destination"}
                       </span>
 
                       <h3>
-                        {pkg.title}
+                        {pkg.name}
                       </h3>
                     </div>
                   </div>
@@ -640,7 +814,7 @@ export default function Home() {
                       </span>
 
                       <strong>
-                        {pkg.duration}
+                        {pkg.duration_days ? `${pkg.duration_days} Days` : "Flexible duration"}{pkg.duration_nights != null ? ` / ${pkg.duration_nights} Nights` : ""}
                       </strong>
                     </div>
 
@@ -650,9 +824,7 @@ export default function Home() {
                       </span>
 
                       <strong>
-                        {formatPrice(
-                          pkg.price
-                        )}
+                        {formatPrice(Number(pkg.base_price_usd || 0))}
                       </strong>
                     </div>
 
@@ -663,6 +835,9 @@ export default function Home() {
                   </div>
                 </a>
               )
+            )}
+            {!contentLoading && packages.length === 0 && (
+              <p style={{ gridColumn: "1 / -1", padding: "24px 0", color: "#64748b" }} className="homepage-empty-state">New journeys are being prepared. Please check back soon.</p>
             )}
           </div>
 
@@ -718,33 +893,23 @@ export default function Home() {
               (adventure) => (
                 <a
                   href="/adventures"
-                  key={
-                    adventure.title
-                  }
+                  key={adventure.id}
                   className="adventure-card"
                 >
                   <img
-                    src={
-                      adventure.image
-                    }
-                    alt={
-                      adventure.title
-                    }
+                    src={adventure.hero_image || "/images/service-adventure.jpg"}
+                    alt={adventure.name}
                   />
 
                   <div className="adventure-overlay" />
 
                   <div className="adventure-content">
                     <span>
-                      {
-                        adventure.category
-                      }
+                      {adventure.category || "Travel experience"}
                     </span>
 
                     <h3>
-                      {
-                        adventure.title
-                      }
+                      {adventure.name}
                     </h3>
 
                     <div>
@@ -753,6 +918,9 @@ export default function Home() {
                   </div>
                 </a>
               )
+            )}
+            {!contentLoading && adventures.length === 0 && (
+              <p style={{ gridColumn: "1 / -1", padding: "24px 0", color: "#64748b" }} className="homepage-empty-state">New experiences are coming soon.</p>
             )}
           </div>
         </div>
@@ -855,33 +1023,386 @@ export default function Home() {
       </section>
 
       <style jsx global>{`
-        .booking-wrapper-mobile {
-          display: none;
+        .home-cruises-section {
+          position: relative;
+          padding: 88px 0 96px;
+          background: linear-gradient(180deg, #f5f7f4 0%, #ffffff 100%);
+          color: #143d31;
+        }
+
+        .home-cruises-heading {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 28px;
+          margin-bottom: 34px;
+        }
+
+        .home-cruises-heading h2 {
+          max-width: 760px;
+          margin: 14px 0 12px;
+          font-size: clamp(36px, 4.8vw, 64px);
+          line-height: 1.04;
+          letter-spacing: -0.045em;
+          font-weight: 700;
+        }
+
+        .home-cruises-heading h2 em {
+          color: #6a9b7f;
+          font-family: Georgia, "Times New Roman", serif;
+          font-weight: 400;
+        }
+
+        .home-cruises-heading p {
+          max-width: 610px;
+          margin: 0;
+          color: #69766f;
+          font-size: 15px;
+          line-height: 1.8;
+        }
+
+        .home-cruises-view-all {
+          display: inline-flex;
+          align-items: center;
+          gap: 14px;
+          flex: 0 0 auto;
+          padding: 13px 0;
+          border-bottom: 1px solid #b7c8bd;
+          color: #143d31;
+          font-size: 13px;
+          font-weight: 700;
+          text-decoration: none;
+        }
+
+        .home-cruises-view-all span,
+        .home-cruise-card-link span {
+          transition: transform 180ms ease;
+        }
+
+        .home-cruises-view-all:hover span,
+        .home-cruise-card:hover .home-cruise-card-link span {
+          transform: translate(3px, -3px);
+        }
+
+        .home-cruise-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 22px;
+        }
+
+        .home-cruise-card {
+          min-width: 0;
+          overflow: hidden;
+          border: 1px solid #e4e9e4;
+          border-radius: 18px;
+          background: #ffffff;
+          color: #173d32;
+          text-decoration: none;
+          box-shadow: 0 10px 30px rgba(20, 61, 49, 0.04);
+          transition: transform 220ms ease, box-shadow 220ms ease;
+        }
+
+        .home-cruise-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 18px 38px rgba(20, 61, 49, 0.12);
+        }
+
+        .home-cruise-image {
+          position: relative;
+          height: 250px;
+          overflow: hidden;
+          background: #dce8e3;
+        }
+
+        .home-cruise-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 500ms ease;
+        }
+
+        .home-cruise-card:hover .home-cruise-image img {
+          transform: scale(1.04);
+        }
+
+        .home-cruise-image-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(8, 31, 25, 0.05) 25%, rgba(8, 31, 25, 0.72) 100%);
+        }
+
+        .home-cruise-featured-label {
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          padding: 8px 11px;
+          border: 1px solid rgba(255, 255, 255, 0.42);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.92);
+          color: #143d31;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+        }
+
+        .home-cruise-line {
+          position: absolute;
+          right: 18px;
+          bottom: 17px;
+          left: 18px;
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .home-cruise-details {
+          padding: 22px 22px 20px;
+        }
+
+        .home-cruise-destination {
+          color: #6a9b7f;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .home-cruise-details h3 {
+          margin: 9px 0 8px;
+          color: #143d31;
+          font-size: 23px;
+          line-height: 1.2;
+          letter-spacing: -0.025em;
+        }
+
+        .home-cruise-details > p {
+          min-height: 44px;
+          margin: 0 0 18px;
+          color: #718078;
+          font-size: 13px;
+          line-height: 1.7;
+        }
+
+        .home-cruise-meta {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 12px;
+          padding-top: 16px;
+          border-top: 1px solid #edf0ed;
+          color: #69766f;
+          font-size: 12px;
+        }
+
+        .home-cruise-price {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          color: #143d31;
+          font-size: 17px;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+
+        .home-cruise-price small {
+          margin-bottom: 3px;
+          color: #7b8780;
+          font-size: 10px;
+          font-weight: 500;
+        }
+
+        .home-cruise-card-link {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 19px;
+          color: #143d31;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .home-cruise-card-link span {
+          display: inline-block;
+          font-size: 17px;
+        }
+
+        .home-cruises-message {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 28px;
+          border: 1px solid #e2e9e3;
+          border-radius: 16px;
+          background: #ffffff;
+          color: #64736b;
+          font-size: 14px;
+        }
+
+        .home-cruises-message a {
+          color: #143d31;
+          font-weight: 700;
+          text-decoration: underline;
+          text-underline-offset: 4px;
+        }
+
+        .home-cruises-empty {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 28px;
+          padding: clamp(28px, 5vw, 58px);
+          border-radius: 20px;
+          background: #143d31;
+          color: #ffffff;
+        }
+
+        .home-cruises-empty-eyebrow {
+          color: #b6d8c2;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.16em;
+        }
+
+        .home-cruises-empty h3 {
+          margin: 12px 0 8px;
+          font-size: clamp(25px, 3vw, 38px);
+          letter-spacing: -0.035em;
+        }
+
+        .home-cruises-empty p {
+          margin: 0;
+          color: #d2dfd7;
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .home-cruises-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 20px;
+          flex: 0 0 auto;
+          padding: 15px 20px;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #143d31;
+          font-size: 13px;
+          font-weight: 800;
+          text-decoration: none;
+        }
+
+        @media (max-width: 900px) {
+          .home-cruise-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .home-cruise-card-featured {
+            grid-column: 1 / -1;
+          }
+
+          .home-cruise-card-featured .home-cruise-image {
+            height: 320px;
+          }
         }
 
         @media (max-width: 700px) {
-          .booking-wrapper-mobile {
-            display: block;
-            position: absolute;
-            right: 14px;
-            bottom: 20px;
-            left: 14px;
-            width: auto;
-            margin: 0;
-            z-index: 10;
+          .home-cruises-section {
+            padding: 68px 0;
           }
 
-          .booking-wrapper-desktop {
-            display: none !important;
+          .home-cruises-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 14px;
           }
 
+          .home-cruise-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .home-cruise-card-featured {
+            grid-column: auto;
+          }
+
+          .home-cruise-image,
+          .home-cruise-card-featured .home-cruise-image {
+            height: 240px;
+          }
+
+          .home-cruises-empty {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+        }
+
+        .home-booking-wrapper .booking-input-field {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: center;
+          gap: 7px;
+          min-width: 0;
+          text-align: left;
+          cursor: default;
+        }
+
+        .home-booking-wrapper .booking-input-field label {
+          color: #78847d;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.13em;
+          line-height: 1.2;
+          text-transform: uppercase;
+        }
+
+        .home-booking-wrapper .booking-input-field input,
+        .home-booking-wrapper .booking-input-field select {
+          width: 100%;
+          min-width: 0;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          color: #17211b;
+          font: inherit;
+          font-size: 13px;
+          font-weight: 650;
+        }
+
+        .home-booking-wrapper .booking-input-field input::placeholder {
+          color: #17211b;
+          opacity: 1;
+        }
+
+        .home-booking-wrapper .booking-input-field input[type="date"] {
+          min-height: 20px;
+        }
+
+        .home-booking-wrapper .booking-search-error {
+          grid-column: 1 / -1;
+          margin: 0;
+          color: #b91c1c;
+          font-size: 12px;
+        }
+
+        .home-booking-wrapper {
+          display: block !important;
+          position: relative;
+          inset: auto;
+          width: min(1240px, calc(100% - 48px));
+          margin: -48px auto 72px;
+          z-index: 20;
+        }
+
+        @media (max-width: 700px) {
           .hero {
-            min-height: 900px;
-            padding-bottom: 10;
+            min-height: 760px;
+            padding-bottom: 0;
           }
 
           .hero-content {
-            min-height: 900px;
+            min-height: 760px;
             padding-top: 110px;
             padding-bottom: 100px;
             align-items: flex-start;
@@ -889,47 +1410,66 @@ export default function Home() {
 
           .slider-controls {
             right: 18px;
-            bottom: 315px;
+            bottom: 80px;
           }
 
           .slide-progress {
             right: 18px;
-            bottom: 282px;
+            bottom: 48px;
           }
 
-          .booking-wrapper-mobile .booking-box {
+          .home-booking-wrapper {
+            width: calc(100% - 28px);
+            margin: -28px auto 56px;
+          }
+
+          .home-booking-wrapper .booking-box {
             padding: 10px;
             border-radius: 14px;
           }
 
-          .booking-wrapper-mobile .booking-tabs {
+          .home-booking-wrapper .booking-tabs {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 2px;
             padding: 0 0 8px;
           }
 
-          .booking-wrapper-mobile .booking-tabs button {
+          .home-booking-wrapper .booking-tabs button {
             min-width: 0;
             padding: 10px 3px;
             font-size: 10px;
             white-space: nowrap;
           }
 
-          .booking-wrapper-mobile .booking-fields {
+          .home-booking-wrapper .booking-fields {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .booking-wrapper-mobile .booking-field {
+          .home-booking-wrapper .booking-field {
             min-height: 58px;
             padding: 10px 8px;
           }
 
-          .booking-wrapper-mobile .booking-field strong {
+          .home-booking-wrapper .booking-input-field {
+            min-height: 68px;
+            padding: 10px 8px;
+          }
+
+          .home-booking-wrapper .booking-input-field label {
+            font-size: 9px;
+          }
+
+          .home-booking-wrapper .booking-input-field input,
+          .home-booking-wrapper .booking-input-field select {
             font-size: 11px;
           }
 
-          .booking-wrapper-mobile .search-button {
+          .home-booking-wrapper .booking-field strong {
+            font-size: 11px;
+          }
+
+          .home-booking-wrapper .search-button {
             grid-column: 1 / -1;
             min-height: 44px;
             margin: 8px 4px 2px;
@@ -937,21 +1477,25 @@ export default function Home() {
         }
 
         @media (max-width: 380px) {
-          .hero {
-            min-height: 930px;
-          }
-
-          .hero-content {
-            min-height: 930px;
-          }
-
-          .booking-wrapper-mobile .booking-field strong {
+          .home-booking-wrapper .booking-field strong {
             font-size: 10px;
           }
         }
       `}</style>
     </main>
   );
+}
+
+function formatCruiseMoney(amount: number, currencyCode: string) {
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: currencyCode || "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${currencyCode || "INR"} ${Number(amount).toLocaleString("en-IN")}`;
+  }
 }
 
 /* ============================================================

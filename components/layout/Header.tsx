@@ -18,6 +18,10 @@ const navigation = [
     href: "/hotels",
   },
   {
+    label: "Cruises",
+    href: "/cruises",
+  },
+  {
     label: "Journeys",
     href: "/packages",
   },
