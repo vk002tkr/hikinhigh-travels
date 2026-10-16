@@ -153,7 +153,7 @@ export default function Footer() {
 
             <a href="tel:+918130069469">+91 813 006 9469</a>
 
-            <span>Gurugram, Haryana, India</span>
+            <span>New Delhi, Delhi, India</span>
           </div>
 
           {/* Social Media */}
