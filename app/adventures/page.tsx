@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Adventure = {
   name: string;
@@ -102,13 +102,15 @@ const filters = [
 
 function AdventureCard({
   item,
+  queryString,
 }: {
   item: Adventure;
+  queryString: string;
 }) {
   return (
     <article className="adventure-card">
       <Link
-        href={`/adventures/${item.slug}`}
+        href={`/adventures/${item.slug}${queryString ? `?${queryString}` : ""}`}
         className="adventure-card-image-wrap"
       >
         <img
@@ -144,7 +146,7 @@ function AdventureCard({
           <span>From {item.price}</span>
 
           <Link
-            href={`/adventures/${item.slug}`}
+            href={`/adventures/${item.slug}${queryString ? `?${queryString}` : ""}`}
             className="adventure-card-link"
           >
             Explore
@@ -162,18 +164,31 @@ export default function AdventuresPage() {
 
   const [mobileMenu, setMobileMenu] =
     useState(false);
+  const [searchDestination, setSearchDestination] = useState("");
+  const [queryString, setQueryString] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearchDestination(params.get("destination")?.trim() ?? "");
+    const forwarded = new URLSearchParams();
+    ["destination", "checkIn", "checkOut", "travellers"].forEach((key) => {
+      const value = params.get(key);
+      if (value) forwarded.set(key, value);
+    });
+    setQueryString(forwarded.toString());
+  }, []);
 
   const filteredAdventures = useMemo(() => {
-    if (activeFilter === "All Adventures") {
-      return adventures;
-    }
+    const destination = searchDestination.toLowerCase();
+    return adventures.filter((item) => {
+      const categoryMatch = activeFilter === "All Adventures" || item.category === activeFilter;
+      const destinationMatch = !destination || [item.location, item.name, item.category, item.description]
+        .some((value) => value.toLowerCase().includes(destination));
+      return categoryMatch && destinationMatch;
+    });
+  }, [activeFilter, searchDestination]);
 
-    return adventures.filter(
-      (item) => item.category === activeFilter
-    );
-  }, [activeFilter]);
-
-  const featured = adventures[0];
+  const featured = filteredAdventures[0] ?? adventures[0];
 
   return (
     <main className="adventures-page">
@@ -237,9 +252,9 @@ export default function AdventuresPage() {
       </section>
 
       {/* FEATURED */}
-      <section className="adventures-featured">
+      {(!searchDestination || filteredAdventures.length > 0) && <section className="adventures-featured">
         <Link
-          href={`/adventures/${featured.slug}`}
+          href={`/adventures/${featured.slug}${queryString ? `?${queryString}` : ""}`}
           className="adventures-featured-image"
         >
           <img
@@ -289,14 +304,14 @@ export default function AdventuresPage() {
           </div>
 
           <Link
-            href={`/adventures/${featured.slug}`}
+            href={`/adventures/${featured.slug}${queryString ? `?${queryString}` : ""}`}
             className="adventures-primary-button"
           >
             Explore experience
             <span>↗</span>
           </Link>
         </div>
-      </section>
+      </section>}
 
       {/* FILTERS */}
       <section className="adventures-discovery">
@@ -367,9 +382,15 @@ export default function AdventuresPage() {
             <AdventureCard
               key={item.slug}
               item={item}
+              queryString={queryString}
             />
           ))}
         </div>
+        {filteredAdventures.length === 0 && (
+          <p className="adventures-no-results" role="status">
+            No experiences match “{searchDestination}”. Try another destination.
+          </p>
+        )}
       </section>
 
       {/* ADVENTURE PHILOSOPHY */}

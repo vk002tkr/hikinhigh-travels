@@ -15,6 +15,7 @@ type Hotel = {
   cancellation_policy: string | null; is_featured: boolean; is_active: boolean;
   rooms: Room[];
 };
+type RoomForm = { name: string; description: string; maxGuests: string; pricePerNightUsd: string; amenities: string; status: HotelStatus };
 type HotelForm = {
   name: string; destination_id: string; address: string; city: string; country: string;
   category: HotelCategory; rating: string; roomName: string; pricePerNightUsd: string;
@@ -23,6 +24,7 @@ type HotelForm = {
 };
 
 const categories: HotelCategory[] = ["Budget", "Standard", "Deluxe", "Luxury", "Resort"];
+const emptyRoomForm: RoomForm = { name: "", description: "", maxGuests: "2", pricePerNightUsd: "", amenities: "", status: "Active" };
 const emptyForm: HotelForm = {
   name: "", destination_id: "", address: "", city: "", country: "", category: "Standard",
   rating: "4.0", roomName: "Standard Room", pricePerNightUsd: "", maxGuests: "2", status: "Active",
@@ -72,6 +74,13 @@ export default function HotelsPage() {
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [form, setForm] = useState<HotelForm>(emptyForm);
   const [error, setError] = useState("");
+  const [roomManagerOpen, setRoomManagerOpen] = useState(false);
+  const [roomSaving, setRoomSaving] = useState(false);
+  const [roomDeletingId, setRoomDeletingId] = useState<string | null>(null);
+  const [roomEditingId, setRoomEditingId] = useState<string | null>(null);
+  const [roomForm, setRoomForm] = useState<RoomForm>(emptyRoomForm);
+  const [roomError, setRoomError] = useState("");
+  const [roomNotice, setRoomNotice] = useState("");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -205,6 +214,97 @@ export default function HotelsPage() {
     } finally { setSaving(false); }
   }
 
+  function openRoomManager(hotel: Hotel) {
+    setSelectedHotel(hotel);
+    setRoomManagerOpen(true);
+    setRoomEditingId(null);
+    setRoomForm(emptyRoomForm);
+    setRoomError("");
+    setRoomNotice("");
+  }
+
+  function startEditRoom(room: Room) {
+    setRoomEditingId(room.id);
+    setRoomForm({
+      name: room.name,
+      description: room.description ?? "",
+      maxGuests: String(room.max_guests ?? 2),
+      pricePerNightUsd: String(room.base_price_usd ?? ""),
+      amenities: listValue(room.amenities).join(", "),
+      status: room.is_active ? "Active" : "Inactive",
+    });
+    setRoomError("");
+    setRoomNotice("");
+  }
+
+  async function saveRoom(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRoomError("");
+    setRoomNotice("");
+    if (!selectedHotel) return;
+    const name = roomForm.name.trim();
+    const price = Number(roomForm.pricePerNightUsd);
+    const maxGuests = Number(roomForm.maxGuests);
+    if (!name) { setRoomError("Room category name is required."); return; }
+    if (roomForm.pricePerNightUsd.trim() === "" || !Number.isFinite(price) || price < 0) { setRoomError("Enter a valid price per night in USD."); return; }
+    if (!Number.isInteger(maxGuests) || maxGuests < 1 || maxGuests > 100) { setRoomError("Maximum guests must be a whole number from 1 to 100."); return; }
+    setRoomSaving(true);
+    const payload = {
+      name,
+      description: roomForm.description.trim() || null,
+      max_guests: maxGuests,
+      base_price_usd: price,
+      amenities: roomForm.amenities.split(",").map((item) => item.trim()).filter(Boolean),
+      is_active: roomForm.status === "Active",
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      if (roomEditingId) {
+        const { data, error: updateError } = await supabase.from("hotel_rooms").update(payload).eq("id", roomEditingId).eq("hotel_id", selectedHotel.id).select("id").maybeSingle();
+        if (updateError) throw updateError;
+        if (!data) throw new Error("No room category was updated. Check hotel_rooms UPDATE permissions and RLS policies.");
+        setRoomNotice("Room category updated successfully.");
+      } else {
+        const { error: insertError } = await supabase.from("hotel_rooms").insert({ ...payload, hotel_id: selectedHotel.id, gallery: [] });
+        if (insertError) throw insertError;
+        setRoomNotice("Room category added successfully.");
+      }
+      setRoomEditingId(null);
+      setRoomForm(emptyRoomForm);
+      await loadData();
+      const { data: refreshedRooms, error: refreshError } = await supabase.from("hotel_rooms").select("id,hotel_id,name,description,max_guests,base_price_usd,gallery,amenities,is_active").eq("hotel_id", selectedHotel.id).order("base_price_usd", { ascending: true });
+      if (refreshError) throw refreshError;
+      setSelectedHotel((current) => current ? { ...current, rooms: (refreshedRooms ?? []) as Room[] } : current);
+    } catch (saveError) {
+      setRoomError(messageOf(saveError));
+    } finally {
+      setRoomSaving(false);
+    }
+  }
+
+  async function deleteRoom(room: Room) {
+    if (!selectedHotel) return;
+    if (!window.confirm(`Delete the room category "${room.name}"?`)) return;
+    setRoomDeletingId(room.id);
+    setRoomError("");
+    setRoomNotice("");
+    try {
+      const { data, error: deleteError } = await supabase.from("hotel_rooms").delete().eq("id", room.id).eq("hotel_id", selectedHotel.id).select("id").maybeSingle();
+      if (deleteError) throw deleteError;
+      if (!data) throw new Error("No room category was deleted. Check hotel_rooms DELETE permissions and RLS policies.");
+      setRoomNotice("Room category deleted.");
+      if (roomEditingId === room.id) { setRoomEditingId(null); setRoomForm(emptyRoomForm); }
+      await loadData();
+      const { data: refreshedRooms, error: refreshError } = await supabase.from("hotel_rooms").select("id,hotel_id,name,description,max_guests,base_price_usd,gallery,amenities,is_active").eq("hotel_id", selectedHotel.id).order("base_price_usd", { ascending: true });
+      if (refreshError) throw refreshError;
+      setSelectedHotel((current) => current ? { ...current, rooms: (refreshedRooms ?? []) as Room[] } : current);
+    } catch (deleteError) {
+      setRoomError(messageOf(deleteError));
+    } finally {
+      setRoomDeletingId(null);
+    }
+  }
+
   async function deleteHotel(hotel: Hotel) {
     if (!window.confirm(`Delete "${hotel.name}" and its room records? This cannot be undone.`)) return;
     setDeletingId(hotel.id); setPageError(""); setNotice("");
@@ -249,7 +349,7 @@ export default function HotelsPage() {
           {loading ? <div className="px-5 py-16 text-center text-sm text-gray-500">Loading hotels from Supabase…</div> : <div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-left"><thead className="bg-gray-50/80"><tr className="text-xs font-semibold uppercase tracking-wider text-gray-500"><th className="px-5 py-4">Hotel</th><th className="px-5 py-4">Category</th><th className="px-5 py-4">Rating</th><th className="px-5 py-4">Starting price / night</th><th className="px-5 py-4">Room types</th><th className="px-5 py-4">Status</th><th className="px-5 py-4 text-right">Actions</th></tr></thead>
             <tbody className="divide-y divide-gray-100">{filteredHotels.map((hotel) => <tr key={hotel.id} className="transition hover:bg-gray-50/70"><td className="px-5 py-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-emerald-50 text-xl">{hotel.hero_image ? <img src={hotel.hero_image} alt="" className="h-full w-full object-cover" /> : "🏨"}</div><div><p className="font-semibold text-gray-900">{hotel.name}</p><p className="mt-1 text-xs text-gray-500">{hotel.city || ""}{hotel.country ? `, ${hotel.country}` : ""}</p></div></div></td>
               <td className="px-5 py-4"><span className="rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-700">{categoryOf(hotel.star_rating)}</span></td><td className="px-5 py-4"><span className="font-semibold text-amber-600">{hotel.star_rating === null ? "—" : `★ ${Number(hotel.star_rating).toFixed(1)}`}</span></td><td className="px-5 py-4 text-sm font-semibold text-gray-900">{activeRooms(hotel).length ? formatUsd(hotelRoomPrice(hotel)) : "Not priced"}</td><td className="px-5 py-4 text-sm text-gray-600">{hotel.rooms.length}</td><td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold ${hotel.is_active ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}><span className={`h-1.5 w-1.5 rounded-full ${hotel.is_active ? "bg-emerald-500" : "bg-gray-400"}`} />{hotel.is_active ? "Active" : "Inactive"}</span></td>
-              <td className="px-5 py-4"><div className="flex items-center justify-end gap-1"><button onClick={() => { setSelectedHotel(hotel); setModal("view"); }} className="rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-blue-50 hover:text-blue-700">View</button><button onClick={() => openEditModal(hotel)} className="rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-emerald-50 hover:text-emerald-700">Edit</button><button disabled={deletingId === hotel.id} onClick={() => void deleteHotel(hotel)} className="rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">{deletingId === hotel.id ? "Deleting…" : "Delete"}</button></div></td></tr>)}
+              <td className="px-5 py-4"><div className="flex items-center justify-end gap-1"><button onClick={() => { setSelectedHotel(hotel); setModal("view"); }} className="rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-blue-50 hover:text-blue-700">View</button><button onClick={() => openEditModal(hotel)} className="rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-emerald-50 hover:text-emerald-700">Edit</button><button onClick={() => openRoomManager(hotel)} className="rounded-lg px-2.5 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">Rooms</button><button disabled={deletingId === hotel.id} onClick={() => void deleteHotel(hotel)} className="rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">{deletingId === hotel.id ? "Deleting…" : "Delete"}</button></div></td></tr>)}
               {filteredHotels.length === 0 && <tr><td colSpan={7} className="px-5 py-16 text-center"><div className="text-3xl">🏨</div><p className="mt-3 font-semibold text-gray-800">{hotels.length ? "No hotels match your filters" : "No hotels in Supabase yet"}</p><p className="mt-1 text-sm text-gray-500">{hotels.length ? "Try changing the search or filters." : "Use Add New Hotel to create your first listing."}</p></td></tr>}</tbody></table></div>}
         </div>
       </div>
@@ -257,7 +357,7 @@ export default function HotelsPage() {
       {modal && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/50 p-4 backdrop-blur-[2px]" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4 sm:px-6"><div><h2 className="text-lg font-bold text-gray-900">{modal === "add" ? "Add New Hotel" : modal === "edit" ? "Edit Hotel" : "Hotel Details"}</h2><p className="mt-1 text-sm text-gray-500">{modal === "view" ? selectedHotel?.id : "Hotel details and first room type"}</p></div><button disabled={saving} onClick={() => setModal(null)} aria-label="Close modal" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xl text-gray-500 hover:bg-gray-200 disabled:opacity-50">×</button></div>
         {modal === "view" && selectedHotel ? <div className="space-y-5 p-5 sm:p-6"><div className="rounded-2xl bg-emerald-50 p-5"><p className="text-sm font-medium text-emerald-700">{categoryOf(selectedHotel.star_rating)} Accommodation</p><h3 className="mt-2 text-2xl font-bold text-gray-900">{selectedHotel.name}</h3><p className="mt-2 text-sm text-gray-600">{[selectedHotel.city, selectedHotel.country].filter(Boolean).join(", ")}</p><p className="mt-1 text-sm text-gray-600">{selectedHotel.address || "No address added"}</p><div className="mt-4 flex flex-wrap items-center gap-4"><p className="text-2xl font-bold text-emerald-800">{selectedHotel.rooms.some((room) => room.is_active) ? formatUsd(hotelRoomPrice(selectedHotel)) : "Not priced"}<span className="text-sm font-normal text-gray-500"> / night starting</span></p><span className="font-semibold text-amber-600">{selectedHotel.star_rating === null ? "No rating" : `★ ${Number(selectedHotel.star_rating).toFixed(1)}`}</span></div></div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Detail label="Hotel ID" value={selectedHotel.id} /><Detail label="Room types" value={String(selectedHotel.rooms.length)} /><Detail label="Status" value={selectedHotel.is_active ? "Active" : "Inactive"} /><Detail label="Featured" value={selectedHotel.is_featured ? "Yes" : "No"} /><Detail label="Check-in" value={selectedHotel.check_in_time || "Not set"} /><Detail label="Check-out" value={selectedHotel.check_out_time || "Not set"} /></div><div><h4 className="font-semibold text-gray-900">Description</h4><p className="mt-2 text-sm leading-6 text-gray-600">{selectedHotel.description || "No description added."}</p></div><div><h4 className="font-semibold text-gray-900">Room types and prices</h4>{selectedHotel.rooms.length ? <div className="mt-3 space-y-2">{selectedHotel.rooms.map((room) => <div key={room.id} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 p-3"><div><p className="font-medium text-gray-800">{room.name}</p><p className="text-xs text-gray-500">Up to {room.max_guests} guests · {room.is_active ? "Active" : "Inactive"}</p></div><p className="font-semibold text-gray-900">{formatUsd(Number(room.base_price_usd))}</p></div>)}</div> : <p className="mt-2 text-sm text-gray-500">No room types added.</p>}</div><div><h4 className="font-semibold text-gray-900">Amenities</h4><div className="mt-3 flex flex-wrap gap-2">{listValue(selectedHotel.amenities).length ? listValue(selectedHotel.amenities).map((amenity) => <span key={amenity} className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">{amenity}</span>) : <p className="text-sm text-gray-500">No amenities added.</p>}</div></div><div className="flex justify-end gap-3 border-t border-gray-100 pt-4"><button onClick={() => openEditModal(selectedHotel)} className="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800">Edit Hotel</button><button onClick={() => setModal(null)} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Close</button></div></div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Detail label="Hotel ID" value={selectedHotel.id} /><Detail label="Room types" value={String(selectedHotel.rooms.length)} /><Detail label="Status" value={selectedHotel.is_active ? "Active" : "Inactive"} /><Detail label="Featured" value={selectedHotel.is_featured ? "Yes" : "No"} /><Detail label="Check-in" value={selectedHotel.check_in_time || "Not set"} /><Detail label="Check-out" value={selectedHotel.check_out_time || "Not set"} /></div><div><h4 className="font-semibold text-gray-900">Description</h4><p className="mt-2 text-sm leading-6 text-gray-600">{selectedHotel.description || "No description added."}</p></div><div><h4 className="font-semibold text-gray-900">Room types and prices</h4>{selectedHotel.rooms.length ? <div className="mt-3 space-y-2">{selectedHotel.rooms.map((room) => <div key={room.id} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 p-3"><div><p className="font-medium text-gray-800">{room.name}</p><p className="text-xs text-gray-500">Up to {room.max_guests} guests · {room.is_active ? "Active" : "Inactive"}</p></div><p className="font-semibold text-gray-900">{formatUsd(Number(room.base_price_usd))}</p></div>)}</div> : <p className="mt-2 text-sm text-gray-500">No room types added.</p>}</div><div><h4 className="font-semibold text-gray-900">Amenities</h4><div className="mt-3 flex flex-wrap gap-2">{listValue(selectedHotel.amenities).length ? listValue(selectedHotel.amenities).map((amenity) => <span key={amenity} className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">{amenity}</span>) : <p className="text-sm text-gray-500">No amenities added.</p>}</div></div><div className="flex justify-end gap-3 border-t border-gray-100 pt-4"><button onClick={() => { const hotel = selectedHotel; setModal(null); openRoomManager(hotel); }} className="rounded-xl border border-emerald-200 px-5 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">Manage Room Categories</button><button onClick={() => openEditModal(selectedHotel)} className="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800">Edit Hotel</button><button onClick={() => setModal(null)} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Close</button></div></div>
         : <form onSubmit={saveHotel} className="space-y-5 p-5 sm:p-6"><div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className={labelClass}>Hotel Name *<input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} className={inputClass} placeholder="Enter hotel name" /></label>
           <label className={labelClass}>Destination *<select required value={form.destination_id} onChange={(event) => { const d = destinations.find((item) => item.id === event.target.value); setForm({ ...form, destination_id: event.target.value, city: d?.name ?? form.city, country: d?.country ?? form.country }); }} className={inputClass}><option value="">Choose destination</option>{destinations.map((destination) => <option key={destination.id} value={destination.id}>{destination.name}{destination.country ? `, ${destination.country}` : ""}</option>)}</select>{destinations.length === 0 && <span className="mt-1 block text-xs text-amber-700">No active destinations found. Activate a destination first.</span>}</label>
@@ -280,6 +380,25 @@ export default function HotelsPage() {
           {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-5"><button type="button" disabled={saving} onClick={() => setModal(null)} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">Cancel</button><button type="submit" disabled={saving || destinations.length === 0} className="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{saving ? "Saving…" : modal === "edit" ? "Save Changes" : "Create Hotel"}</button></div>
         </form>}
+      </div></div>}
+
+      {roomManagerOpen && selectedHotel && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-950/50 p-3 backdrop-blur-[2px] sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget && !roomSaving) setRoomManagerOpen(false); }}><div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4 sm:px-6"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Room management</p><h2 className="mt-1 text-xl font-bold text-gray-900">{selectedHotel.name}</h2><p className="mt-1 text-sm text-gray-500">Add and manage room categories, capacity and nightly prices.</p></div><button disabled={roomSaving} onClick={() => setRoomManagerOpen(false)} aria-label="Close room manager" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xl text-gray-500 hover:bg-gray-200 disabled:opacity-50">×</button></div>
+        <div className="grid grid-cols-1 gap-6 p-5 lg:grid-cols-[1.1fr_0.9fr] sm:p-6">
+          <section><div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-bold text-gray-900">Room categories <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{selectedHotel.rooms.length}</span></h3><button type="button" onClick={() => { setRoomEditingId(null); setRoomForm(emptyRoomForm); setRoomError(""); setRoomNotice(""); }} className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800">+ Add category</button></div>
+            {selectedHotel.rooms.length ? <div className="space-y-3">{selectedHotel.rooms.map((room) => <div key={room.id} className={`rounded-xl border p-4 ${roomEditingId === room.id ? "border-emerald-400 bg-emerald-50/40" : "border-gray-200"}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold text-gray-900">{room.name}</h4><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${room.is_active ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>{room.is_active ? "Active" : "Inactive"}</span></div><p className="mt-1 text-sm text-gray-500">Up to {room.max_guests} guests · {listValue(room.amenities).slice(0, 3).join(" · ") || "No room amenities added"}</p>{room.description && <p className="mt-2 text-sm text-gray-600">{room.description}</p>}<p className="mt-2 text-lg font-bold text-emerald-800">{formatUsd(Number(room.base_price_usd))}<span className="ml-1 text-xs font-normal text-gray-500">/ night</span></p></div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => startEditRoom(room)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Edit</button><button type="button" disabled={roomDeletingId === room.id} onClick={() => void deleteRoom(room)} className="rounded-lg border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">{roomDeletingId === room.id ? "Deleting…" : "Delete"}</button></div></div></div>)}</div> : <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center"><p className="font-semibold text-gray-800">No room categories yet</p><p className="mt-1 text-sm text-gray-500">Use “Add category” to create the first room type for this hotel.</p></div>}
+          </section>
+          <section className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 sm:p-5"><h3 className="font-bold text-gray-900">{roomEditingId ? "Edit room category" : "Add room category"}</h3><p className="mt-1 text-sm text-gray-500">Fields marked * are required.</p><form onSubmit={saveRoom} className="mt-4 space-y-4">
+            <label className={labelClass}>Room category name *<input required maxLength={120} value={roomForm.name} onChange={(event) => setRoomForm({ ...roomForm, name: event.target.value })} className={inputClass} placeholder="e.g. Deluxe King" /></label>
+            <label className={labelClass}>Price per night (USD) *<input required type="number" min="0" step="0.01" value={roomForm.pricePerNightUsd} onChange={(event) => setRoomForm({ ...roomForm, pricePerNightUsd: event.target.value })} className={inputClass} placeholder="50.00" /></label>
+            <label className={labelClass}>Maximum guests *<input required type="number" min="1" max="100" step="1" value={roomForm.maxGuests} onChange={(event) => setRoomForm({ ...roomForm, maxGuests: event.target.value })} className={inputClass} /></label>
+            <label className={labelClass}>Room amenities<textarea rows={2} value={roomForm.amenities} onChange={(event) => setRoomForm({ ...roomForm, amenities: event.target.value })} className={inputClass} placeholder="King bed, Wi-Fi, Air conditioning" /><span className="mt-1 block text-xs font-normal text-gray-500">Separate amenities with commas.</span></label>
+            <label className={labelClass}>Description<textarea rows={3} maxLength={2000} value={roomForm.description} onChange={(event) => setRoomForm({ ...roomForm, description: event.target.value })} className={inputClass} placeholder="Describe this room category…" /></label>
+            <label className={labelClass}>Status<select value={roomForm.status} onChange={(event) => setRoomForm({ ...roomForm, status: event.target.value as HotelStatus })} className={inputClass}><option value="Active">Active — show on website</option><option value="Inactive">Inactive — hide on website</option></select></label>
+            {roomError && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700">{roomError}</p>}{roomNotice && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">{roomNotice}</p>}
+            <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-4"><button type="button" disabled={roomSaving} onClick={() => { setRoomEditingId(null); setRoomForm(emptyRoomForm); setRoomError(""); setRoomNotice(""); }} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">Clear form</button><button type="submit" disabled={roomSaving} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">{roomSaving ? "Saving…" : roomEditingId ? "Save category" : "Add category"}</button></div>
+          </form></section>
+        </div>
       </div></div>}
     </div>
   );

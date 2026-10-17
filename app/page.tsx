@@ -78,6 +78,10 @@ type HeroSlide = {
   accent: string;
   description: string;
   image: string;
+  primaryHref: string;
+  primaryLabel: string;
+  secondaryHref: string;
+  secondaryLabel: string;
 };
 
 const heroSlides: HeroSlide[] = [
@@ -85,41 +89,111 @@ const heroSlides: HeroSlide[] = [
     location: "Ocean Voyages · Worldwide",
     title: "The world is better",
     accent: "from the sea.",
-    description:
-      "Discover extraordinary cruise holidays, breathtaking coastlines and unforgettable days at sea.",
+    description: "Discover extraordinary cruise holidays, breathtaking coastlines and unforgettable days at sea.",
     image: "https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/cruises",
+    primaryLabel: "Explore cruises",
+    secondaryHref: "/cruises",
+    secondaryLabel: "Discover sailings",
   },
   {
     location: "Island Hopping · Beyond Ordinary",
     title: "Wake up somewhere",
     accent: "wonderful.",
-    description:
-      "Unpack once and explore beautiful ports, sunlit islands and new horizons on every sailing.",
+    description: "Unpack once and explore beautiful ports, sunlit islands and new horizons on every sailing.",
     image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/packages",
+    primaryLabel: "Explore island escapes",
+    secondaryHref: "/destinations",
+    secondaryLabel: "Find your destination",
   },
   {
     location: "Life On Board · All Aboard",
     title: "Make the journey",
     accent: "the destination.",
-    description:
-      "From relaxing days on deck to memorable shore excursions, your next story starts on board.",
+    description: "From relaxing days on deck to memorable shore excursions, your next story starts on board.",
     image: "https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/cruises",
+    primaryLabel: "Find your cruise",
+    secondaryHref: "/adventures",
+    secondaryLabel: "Explore experiences",
   },
   {
     location: "Coastal Discoveries · Worldwide",
     title: "Find your own",
     accent: "blue horizon.",
-    description:
-      "Explore cruise holidays made for curious travellers, beautiful places and moments worth keeping.",
+    description: "Explore beautiful beaches, coastal towns and laid-back escapes made for curious travellers.",
     image: "/images/hero-goa.jpg",
+    primaryHref: "/destinations",
+    primaryLabel: "Explore destinations",
+    secondaryHref: "/packages",
+    secondaryLabel: "Browse holidays",
   },
   {
     location: "Your Next Voyage · Hikinhigh",
     title: "Leave ordinary",
     accent: "far behind.",
-    description:
-      "Browse sailings, compare your options and let the sea lead you somewhere extraordinary.",
+    description: "Browse sailings, compare your options and let the sea lead you somewhere extraordinary.",
     image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/cruises",
+    primaryLabel: "Explore cruises",
+    secondaryHref: "/packages",
+    secondaryLabel: "Plan a getaway",
+  },
+  {
+    location: "Mountain Trails · Hiking & Trekking",
+    title: "Take the path",
+    accent: "less travelled.",
+    description: "Find fresh air, dramatic mountain views and rewarding hiking and trekking adventures.",
+    image: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/adventures",
+    primaryLabel: "Explore hiking",
+    secondaryHref: "/packages",
+    secondaryLabel: "Plan a mountain trip",
+  },
+  {
+    location: "Adrenaline Rush · Bungee & More",
+    title: "Feel your heart race",
+    accent: "then do it again.",
+    description: "Make room for big thrills, from bungee jumping and ziplining to once-in-a-lifetime outdoor challenges.",
+    image: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/adventures",
+    primaryLabel: "Find an adventure",
+    secondaryHref: "/adventures",
+    secondaryLabel: "Explore activities",
+  },
+  {
+    location: "Explore More · Tours & Culture",
+    title: "Get to know",
+    accent: "somewhere new.",
+    description: "Wander historic streets, discover local culture and see more with thoughtfully planned tours.",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/packages",
+    primaryLabel: "Explore tour packages",
+    secondaryHref: "/destinations",
+    secondaryLabel: "Choose a destination",
+  },
+  {
+    location: "Underwater Wonders · Ocean Adventures",
+    title: "Dive into a world",
+    accent: "of wonder.",
+    description: "Discover vibrant reefs, clear blue water and unforgettable ocean experiences for your next escape.",
+    image: "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/adventures",
+    primaryLabel: "Explore water activities",
+    secondaryHref: "/packages",
+    secondaryLabel: "Find a beach escape",
+  },
+  {
+    location: "Wild Landscapes · Outdoor Escapes",
+    title: "Go beyond",
+    accent: "the usual.",
+    description: "From scenic road trips and wildlife encounters to camping under the stars, make every day count.",
+    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=2200&q=85",
+    primaryHref: "/adventures",
+    primaryLabel: "Discover adventures",
+    secondaryHref: "/packages",
+    secondaryLabel: "Plan your journey",
   },
 ];
 
@@ -325,17 +399,17 @@ export default function Home() {
 
             <div className="hero-buttons">
               <a
-                href="/cruises"
+                href={slide.primaryHref}
                 className="primary-button"
               >
-                Explore cruises
+                {slide.primaryLabel}
               </a>
 
               <a
-                href="#cruises"
+                href={slide.secondaryHref}
                 className="secondary-button"
               >
-                Discover sailings
+                {slide.secondaryLabel}
               </a>
             </div>
           </div>

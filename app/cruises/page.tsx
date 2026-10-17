@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -86,6 +86,51 @@ export default function CruisesPage() {
   const [cruisesLoading, setCruisesLoading] = useState(true);
   const [cruisesError, setCruisesError] = useState("");
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
+  const [searchCriteria, setSearchCriteria] = useState({
+    destination: "",
+    checkIn: "",
+    checkOut: "",
+    travellers: 2,
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const destination = params.get("destination")?.trim() ?? "";
+    const checkIn = params.get("checkIn") ?? "";
+    const checkOut = params.get("checkOut") ?? "";
+    const parsedTravellers = Number(params.get("travellers") ?? 2);
+    const travellers = Number.isFinite(parsedTravellers)
+      ? Math.min(10, Math.max(1, Math.floor(parsedTravellers)))
+      : 2;
+
+    setSearchCriteria({ destination, checkIn, checkOut, travellers });
+    setForm((current) => ({
+      ...current,
+      destination: destination || current.destination,
+      departure_date: checkIn || current.departure_date,
+      return_date: checkOut || current.return_date,
+      adults: travellers,
+    }));
+  }, []);
+
+  const filteredCruises = useMemo(() => {
+    const destination = searchCriteria.destination.toLowerCase();
+    return cruises.filter((cruise) => {
+      const destinationMatch = !destination || [
+        cruise.destination,
+        cruise.name,
+        cruise.cruise_line,
+        cruise.departure_port ?? "",
+      ].some((value) => value.toLowerCase().includes(destination));
+
+      const departure = cruise.departure_date?.slice(0, 10) ?? "";
+      const returning = cruise.return_date?.slice(0, 10) ?? "";
+      const departureMatch = !searchCriteria.checkIn || !departure || departure >= searchCriteria.checkIn;
+      const returnMatch = !searchCriteria.checkOut || !returning || returning <= searchCriteria.checkOut;
+
+      return destinationMatch && departureMatch && returnMatch;
+    });
+  }, [cruises, searchCriteria]);
 
   useEffect(() => {
     let mounted = true;
@@ -394,7 +439,7 @@ export default function CruisesPage() {
             </p>
           </div>
           <span className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-            {cruisesLoading ? "Discovering voyages…" : `${cruises.length} ${cruises.length === 1 ? "voyage" : "voyages"} available`}
+            {cruisesLoading ? "Discovering voyages…" : `${filteredCruises.length} ${filteredCruises.length === 1 ? "voyage" : "voyages"} available`}
           </span>
         </div>
 
@@ -415,17 +460,17 @@ export default function CruisesPage() {
               </div>
             ))}
           </div>
-        ) : cruises.length === 0 ? (
+        ) : filteredCruises.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-3xl">🚢</div>
-            <h3 className="mt-4 text-lg font-bold text-slate-900">New cruises are on the way</h3>
+            <h3 className="mt-4 text-lg font-bold text-slate-900">{cruises.length === 0 ? "New cruises are on the way" : "No cruises match your search"}</h3>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">
-Our team is preparing the catalogue. Share your preferred destination and we’ll help you explore the right sailing.
+{cruises.length === 0 ? "Our team is preparing the catalogue. Share your preferred destination and we’ll help you explore the right sailing." : "Try another destination or adjust your travel dates to see more available sailings."}
             </p>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {cruises.map((cruise) => (
+            {filteredCruises.map((cruise) => (
               <article key={cruise.id} className="group overflow-hidden rounded-[1.65rem] border border-slate-200/80 bg-white shadow-[0_10px_40px_-25px_rgba(7,35,60,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_25px_55px_-25px_rgba(7,35,60,0.4)]">
                 <div className="relative h-60 overflow-hidden bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-950 sm:h-64">
                   {cruise.cover_image_url ? (

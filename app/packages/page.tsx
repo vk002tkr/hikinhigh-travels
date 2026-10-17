@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Package = {
   name: string;
@@ -129,7 +129,7 @@ const filters = [
   "Ladakh",
 ];
 
-function PackageCard({ item }: { item: Package }) {
+function PackageCard({ item, queryString }: { item: Package; queryString: string }) {
   return (
     <article className="package-card">
       <div className="package-card-image-wrap">
@@ -170,7 +170,7 @@ function PackageCard({ item }: { item: Package }) {
         </div>
 
         <Link
-          href={`/packages/${item.slug}`}
+          href={`/packages/${item.slug}${queryString ? `?${queryString}` : ""}`}
           className="package-card-link"
         >
           <span>View journey</span>
@@ -183,18 +183,31 @@ function PackageCard({ item }: { item: Package }) {
 
 export default function PackagesPage() {
   const [activeFilter, setActiveFilter] = useState("All Journeys");
+  const [searchDestination, setSearchDestination] = useState("");
+  const [queryString, setQueryString] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearchDestination(params.get("destination")?.trim() ?? "");
+    const forwarded = new URLSearchParams();
+    ["destination", "checkIn", "checkOut", "travellers"].forEach((key) => {
+      const value = params.get(key);
+      if (value) forwarded.set(key, value);
+    });
+    setQueryString(forwarded.toString());
+  }, []);
 
   const filteredPackages = useMemo(() => {
-    if (activeFilter === "All Journeys") {
-      return packages;
-    }
+    const destination = searchDestination.toLowerCase();
+    return packages.filter((item) => {
+      const categoryMatch = activeFilter === "All Journeys" || item.category === activeFilter;
+      const destinationMatch = !destination || [item.destination, item.name, item.category, item.description]
+        .some((value) => value.toLowerCase().includes(destination));
+      return categoryMatch && destinationMatch;
+    });
+  }, [activeFilter, searchDestination]);
 
-    return packages.filter(
-      (item) => item.category === activeFilter
-    );
-  }, [activeFilter]);
-
-  const featuredPackage = packages[0];
+  const featuredPackage = filteredPackages[0] ?? packages[0];
 
   return (
     <main className="packages-page">
@@ -306,7 +319,7 @@ export default function PackagesPage() {
           FEATURED PACKAGE
       ===================================================== */}
 
-      <section className="packages-featured">
+      {(!searchDestination || filteredPackages.length > 0) && <section className="packages-featured">
         <div className="packages-featured-image">
           <img
             src={featuredPackage.image}
@@ -342,14 +355,14 @@ export default function PackagesPage() {
           </div>
 
           <Link
-            href={`/packages/${featuredPackage.slug}`}
+            href={`/packages/${featuredPackage.slug}${queryString ? `?${queryString}` : ""}`}
             className="packages-primary-button"
           >
             Explore this journey
             <span>↗</span>
           </Link>
         </div>
-      </section>
+      </section>}
 
       {/* =====================================================
           COLLECTION
@@ -382,9 +395,15 @@ export default function PackagesPage() {
             <PackageCard
               key={item.slug}
               item={item}
+              queryString={queryString}
             />
           ))}
         </div>
+        {filteredPackages.length === 0 && (
+          <p className="packages-no-results" role="status">
+            No journeys match “{searchDestination}”. Try another destination.
+          </p>
+        )}
       </section>
 
       {/* =====================================================

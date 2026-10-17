@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { supabase } from "../../../lib/supabase";
 
 type SettingsTab = "general" | "booking" | "notifications";
 
@@ -64,6 +65,35 @@ export default function SettingsPage() {
     useState<SettingsTab>("general");
   const [savedMessage, setSavedMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+
+  const loadSettings = useCallback(async () => {
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("id, settings, updated_at")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        setSettings({ ...initialSettings, ...((data.settings ?? {}) as Partial<SiteSettings>) });
+        setLastSavedAt(data.updated_at ?? null);
+      } else {
+        setSettings({ ...initialSettings });
+        setLastSavedAt(null);
+      }
+    } catch (err) {
+      setErrorMessage(`Settings could not be loaded: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void loadSettings(); }, [loadSettings]);
 
   function updateSetting<K extends keyof SiteSettings>(
     key: K,
@@ -71,30 +101,64 @@ export default function SettingsPage() {
   ) {
     setSettings((current) => ({ ...current, [key]: value }));
     setSavedMessage("");
+    setErrorMessage("");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setSavedMessage("");
-
-    // Demo only: this does not persist settings to a database.
-    window.setTimeout(() => {
+    setErrorMessage("");
+    const prefix = settings.bookingPrefix.trim().toUpperCase();
+    const hours = Number(settings.cancellationHours);
+    if (!/^[A-Z0-9]{2,8}$/.test(prefix)) {
       setSaving(false);
-      setSavedMessage(
-        "Settings updated in this session. Database saving is not connected yet."
-      );
-    }, 400);
+      setActiveTab("booking");
+      setErrorMessage("Booking reference prefix must be 2–8 letters or numbers.");
+      return;
+    }
+    if (!Number.isInteger(hours) || hours < 0 || hours > 720) {
+      setSaving(false);
+      setActiveTab("booking");
+      setErrorMessage("Cancellation notice must be a whole number from 0 to 720 hours.");
+      return;
+    }
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Session expired. Please sign in again.");
+      const normalizedSettings = { ...settings, siteName: settings.siteName.trim(), tagline: settings.tagline.trim(), supportEmail: settings.supportEmail.trim(), supportPhone: settings.supportPhone.trim(), address: settings.address.trim(), bookingPrefix: prefix, cancellationHours: String(hours) };
+      const { error } = await supabase.from("site_settings").upsert({ id: 1, settings: normalizedSettings, updated_by: authData.user.id, updated_at: new Date().toISOString() }, { onConflict: "id" });
+      if (error) throw error;
+      setSettings(normalizedSettings);
+      setLastSavedAt(new Date().toISOString());
+      setSavedMessage("Settings saved to the database successfully.");
+    } catch (err) {
+      setErrorMessage(`Settings were not saved: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function resetSettings() {
-    const confirmed = window.confirm(
-      "Reset all settings to their initial demo values?"
-    );
-
-    if (confirmed) {
+  async function resetSettings() {
+    const confirmed = window.confirm("Reset all settings to the default values and save them to the database?");
+    if (!confirmed) return;
+    setSaving(true);
+    setSavedMessage("");
+    setErrorMessage("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Please sign in again.");
+      const { error } = await supabase.from("site_settings").upsert({ id: 1, settings: initialSettings, updated_by: authData.user.id, updated_at: new Date().toISOString() }, { onConflict: "id" });
+      if (error) throw error;
       setSettings({ ...initialSettings });
-      setSavedMessage("");
+      setLastSavedAt(new Date().toISOString());
+      setSavedMessage("Default settings saved to the database.");
+    } catch (err) {
+      setErrorMessage(`Settings were not reset: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -124,7 +188,7 @@ export default function SettingsPage() {
             onClick={resetSettings}
             className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
-            Reset Demo Settings
+            Reset to Defaults
           </button>
         </div>
 
@@ -138,16 +202,14 @@ export default function SettingsPage() {
                 Configuration preview
               </p>
               <p className="mt-1 text-sm leading-6 text-blue-800">
-                These controls currently update the page state only. They do
-                not change your public website, payment currency, booking
-                behaviour, or email delivery until backend integration is
-                implemented.
+                Settings are loaded from and saved to Supabase. Booking and notification preferences still need to be connected to their workflows before they enforce behaviour.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+        {errorMessage && <div role="alert" className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-semibold">Settings error</p><p className="mt-1 break-words">{errorMessage}</p></div>}
+        {loading ? <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center text-sm text-gray-500">Loading saved settings from Supabase…</div> : <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
           <div className="flex gap-1 overflow-x-auto border-b border-gray-100 p-3 sm:px-5">
             <TabButton
               active={activeTab === "general"}
@@ -359,8 +421,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
-                    These are saved as form values only. They do not currently
-                    enforce approval or cancellation rules.
+                    These preferences are saved in the database. They do not enforce approval or cancellation rules until the booking workflow is connected.
                   </div>
                 </div>
               )}
@@ -414,9 +475,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm leading-6 text-gray-600">
-                    Email delivery is not configured by this page. A backend
-                    notification service will be required to send actual
-                    emails.
+These are saved notification preferences. Actual email delivery requires a configured notification service.
                   </div>
                 </div>
               )}
@@ -440,7 +499,7 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
-        </div>
+        </div>}
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InfoCard

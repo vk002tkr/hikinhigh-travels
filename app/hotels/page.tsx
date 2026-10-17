@@ -65,6 +65,7 @@ export default function HotelsPage() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
 
   const loadHotels = useCallback(async () => {
     setLoading(true);
@@ -461,9 +462,31 @@ export default function HotelsPage() {
                 {featuredHotel.location}
               </span>
 
-              <p>
+              <p
+                className={`hotels-featured-description ${
+                  expandedDescriptions[`featured-${featuredHotel.id}`]
+                    ? "hotels-featured-description-expanded"
+                    : ""
+                }`}
+              >
                 {featuredHotel.description}
               </p>
+
+              {featuredHotel.description.length > 160 && (
+                <button
+                  type="button"
+                  className="hotels-featured-read-more"
+                  aria-expanded={Boolean(expandedDescriptions[`featured-${featuredHotel.id}`])}
+                  onClick={() =>
+                    setExpandedDescriptions((current) => ({
+                      ...current,
+                      [`featured-${featuredHotel.id}`]: !current[`featured-${featuredHotel.id}`],
+                    }))
+                  }
+                >
+                  {expandedDescriptions[`featured-${featuredHotel.id}`] ? "Read less −" : "Read more +"}
+                </button>
+              )}
 
               <div className="hotels-featured-info">
                 <div>
@@ -587,9 +610,29 @@ export default function HotelsPage() {
                       </div>
                     </div>
 
-                    <p>
+                    <p
+                      className={`hotel-description ${
+                        expandedDescriptions[hotel.id] ? "hotel-description-expanded" : ""
+                      }`}
+                    >
                       {hotel.description}
                     </p>
+
+                    {hotel.description.length > 160 && (
+                      <button
+                        type="button"
+                        className="hotel-read-more"
+                        aria-expanded={Boolean(expandedDescriptions[hotel.id])}
+                        onClick={() =>
+                          setExpandedDescriptions((current) => ({
+                            ...current,
+                            [hotel.id]: !current[hotel.id],
+                          }))
+                        }
+                      >
+                        {expandedDescriptions[hotel.id] ? "Read less −" : "Read more +"}
+                      </button>
+                    )}
 
                     <div className="hotel-tags">
                       {hotel.tags.map(
@@ -787,6 +830,191 @@ export default function HotelsPage() {
         </div>
       </section>
 
+    <style jsx global>{`
+      .hotels-page .hotel-card {
+        height: auto;
+        min-height: 0;
+        align-self: start;
+      }
+
+      .hotels-page .hotel-card-image {
+        height: 230px;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .hotels-page .hotel-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hotels-page .hotel-card-content {
+        padding: 24px;
+      }
+
+      .hotels-page .hotel-description {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 4;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      .hotels-page .hotel-description-expanded {
+        display: block;
+        overflow: visible;
+      }
+
+      .hotels-page .hotel-read-more {
+        display: inline-flex;
+        align-items: center;
+        margin: 0 0 18px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #1b382e;
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+      }
+
+      .hotels-page .hotel-tags {
+        margin-top: 8px;
+      }
+
+      .hotels-page .hotels-featured {
+        padding-bottom: 64px;
+      }
+
+      .hotels-page .hotels-featured-card {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        min-height: 0;
+        align-items: stretch;
+      }
+
+      .hotels-page .hotels-featured-image {
+        min-height: 420px;
+        max-height: 560px;
+      }
+
+      .hotels-page .hotels-featured-image img {
+        min-height: 420px;
+        max-height: 560px;
+        object-fit: cover;
+      }
+
+      .hotels-page .hotels-featured-content {
+        padding: clamp(28px, 3vw, 46px);
+        align-items: flex-start;
+      }
+
+      .hotels-page .hotels-featured-content h2 {
+        font-size: clamp(34px, 3.6vw, 52px);
+        line-height: 1;
+        overflow-wrap: anywhere;
+      }
+
+      .hotels-page .hotels-featured-description {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 4;
+        overflow: hidden;
+        margin-top: 18px !important;
+        line-height: 1.7 !important;
+      }
+
+      .hotels-page .hotels-featured-description-expanded {
+        display: block;
+        overflow: visible;
+      }
+
+      .hotels-page .hotels-featured-read-more {
+        border: 0;
+        background: transparent;
+        color: #d5b36b;
+        padding: 8px 0 0;
+        margin: 0;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .hotels-page .hotels-featured-info {
+        gap: 28px;
+        margin-top: 22px;
+      }
+
+      .hotels-page .hotels-featured-content .hotels-primary-button {
+        margin-top: 22px;
+      }
+
+      @media (max-width: 760px) {
+        .hotels-page .hotels-featured {
+          padding-bottom: 48px;
+        }
+
+        .hotels-page .hotels-featured-card {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .hotels-page .hotels-featured-image,
+        .hotels-page .hotels-featured-image img {
+          min-height: 0;
+          height: 230px;
+          max-height: 230px;
+        }
+
+        .hotels-page .hotels-featured-content {
+          padding: 25px 22px 28px;
+        }
+
+        .hotels-page .hotels-featured-content h2 {
+          margin-top: 13px;
+          font-size: clamp(32px, 9vw, 43px);
+        }
+
+        .hotels-page .hotels-featured-content > p {
+          font-size: 13px;
+          line-height: 1.7;
+        }
+
+        .hotels-page .hotels-featured-info {
+          gap: 24px;
+          margin-top: 20px;
+        }
+
+        .hotels-page .hotels-featured-content .hotels-primary-button {
+          margin-top: 20px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .hotels-page .hotel-card-image {
+          height: 190px;
+        }
+
+        .hotels-page .hotel-card-content {
+          padding: 20px;
+        }
+
+        .hotels-page .hotel-card-top h3 {
+          font-size: 1.35rem;
+          line-height: 1.2;
+        }
+
+        .hotels-page .hotel-description {
+          -webkit-line-clamp: 3;
+        }
+
+        .hotels-page .hotel-card-bottom {
+          margin-top: 16px;
+        }
+      }
+    `}</style>
     </main>
   );
 }
