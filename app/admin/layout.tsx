@@ -4,7 +4,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
 const navigation = [
   {
@@ -74,7 +76,159 @@ export default function AdminLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+  const [adminName, setAdminName] = useState("Admin");
+  const [adminRole, setAdminRole] = useState("Administrator");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [pendingBookings, setPendingBookings] = useState(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; href: string | null; is_read: boolean; created_at: string }>>([]);
+  const [notificationsError, setNotificationsError] = useState("");
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  const loadNotifications = async (showLoading = false) => {
+    if (showLoading) setNotificationsLoading(true);
+    setNotificationsError("");
+    const { data, error } = await supabase
+      .from("admin_notifications")
+      .select("id, title, message, href, is_read, created_at")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) {
+      setNotificationsError(error.message);
+      setNotifications([]);
+    } else {
+      setNotifications((data ?? []) as Array<{ id: string; title: string; message: string; href: string | null; is_read: boolean; created_at: string }>);
+    }
+    if (showLoading) setNotificationsLoading(false);
+  };
+
+  const markNotificationRead = async (id: string) => {
+    const { error } = await supabase.from("admin_notifications").update({ is_read: true }).eq("id", id);
+    if (error) {
+      setNotificationsError(error.message);
+      return;
+    }
+    setNotifications((current) => current.map((item) => item.id === id ? { ...item, is_read: true } : item));
+  };
+
+  const markAllNotificationsRead = async () => {
+    const unreadIds = notifications.filter((item) => !item.is_read).map((item) => item.id);
+    if (!unreadIds.length) return;
+    const { error } = await supabase.from("admin_notifications").update({ is_read: true }).in("id", unreadIds);
+    if (error) {
+      setNotificationsError(error.message);
+      return;
+    }
+    setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    let authEventHandled = false;
+
+    const verifySession = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (!mounted) return;
+      if (sessionError || !session?.user) {
+        setAuthChecking(false);
+        router.replace("/login?next=/admin");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, full_name, role, is_active")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (!mounted) return;
+      if (profileError || !profile || !profile.is_active || !["admin", "staff"].includes(String(profile.role).toLowerCase())) {
+        await supabase.auth.signOut();
+        if (!mounted) return;
+        setAuthChecking(false);
+        router.replace("/login?next=/admin&reason=unauthorized");
+        return;
+      }
+
+      setAdminName(profile.full_name?.trim() || session.user.email?.split("@")[0] || "Admin");
+      setAdminRole(String(profile.role).toLowerCase() === "admin" ? "Administrator" : "Staff");
+      setAdminEmail(session.user.email || "");
+      const { count } = await supabase.from("bookings").select("id", { count: "exact", head: true }).in("booking_status", ["pending", "requested", "processing"]);
+      if (mounted) {
+        setPendingBookings(count ?? 0);
+        setAuthChecking(false);
+      }
+    };
+
+    void verifySession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT" && mounted && !authEventHandled) {
+        authEventHandled = true;
+        router.replace("/login?next=/admin");
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  useEffect(() => {
+    if (authChecking) return;
+
+    let active = true;
+    void loadNotifications();
+
+    // Receive database changes immediately. Keep a periodic refresh as a
+    // fallback in case the Realtime connection temporarily disconnects.
+    const channel = supabase
+      .channel("admin-notifications-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "admin_notifications",
+        },
+        () => {
+          if (active) void loadNotifications();
+        }
+      )
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("Admin notification Realtime status:", status);
+        }
+      });
+
+    const timer = window.setInterval(() => {
+      if (active) void loadNotifications();
+    }, 60000);
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      void supabase.removeChannel(channel);
+    };
+  }, [authChecking]);
+
+  const unreadNotifications = notifications.filter((item) => !item.is_read).length;
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Admin sign-out error:", error);
+      setSigningOut(false);
+      return;
+    }
+    router.replace("/login");
+    router.refresh();
+  };
 
   const currentItem = navigation
     .flatMap((group) => group.items)
@@ -89,6 +243,10 @@ export default function AdminLayout({
     href === "/admin"
       ? pathname === "/admin"
       : pathname === href || pathname.startsWith(`${href}/`);
+
+  if (authChecking) {
+    return <div className="flex min-h-screen items-center justify-center bg-[#f6f8fb] text-slate-600"><div className="rounded-2xl border border-slate-200 bg-white px-8 py-7 text-center shadow-sm"><div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-700" /><p className="text-sm font-semibold">Verifying admin access…</p></div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
@@ -153,7 +311,7 @@ export default function AdminLayout({
                       <span>{item.label}</span>
                       {item.label === "Bookings" && (
                         <span className="ml-auto rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                          8
+                          {pendingBookings}
                         </span>
                       )}
                       {active && (
@@ -170,21 +328,22 @@ export default function AdminLayout({
         <div className="border-t border-slate-100 p-4">
           <div className="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">
-              HA
+              {adminName.slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold text-slate-800">
-                Hikinhigh Admin
+                {adminName}
               </p>
               <p className="mt-1 truncate text-[11px] text-slate-500">
-                Administrator
+                {adminRole}
               </p>
             </div>
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
           </div>
-          <p className="px-2 text-[10px] text-slate-400">
-            Hikinhigh Travels · Admin Panel
-          </p>
+          <button type="button" onClick={handleSignOut} disabled={signingOut} className="mb-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-left text-xs font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-60">
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+          <p className="px-2 text-[10px] text-slate-400">Hikinhigh Travels · Admin Panel</p>
         </div>
       </aside>
 
@@ -218,22 +377,42 @@ export default function AdminLayout({
               <Icon name="search" size={17} />
               <span className="text-xs text-slate-400">Admin workspace</span>
             </div>
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
-            >
-              <Icon name="bell" size={19} />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-rose-500" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Notifications"
+                aria-expanded={notificationsOpen}
+                onClick={() => {
+                  const nextOpen = !notificationsOpen;
+                  setNotificationsOpen(nextOpen);
+                  if (nextOpen) void loadNotifications(true);
+                }}
+                className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+              >
+                <Icon name="bell" size={19} />
+                {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[9px] font-bold text-white">{unreadNotifications > 9 ? "9+" : unreadNotifications}</span>}
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 top-12 z-[60] w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <div><p className="text-sm font-bold text-slate-900">Notifications</p><p className="mt-0.5 text-xs text-slate-500">{unreadNotifications} unread</p></div>
+                    <div className="flex items-center gap-2"><button type="button" onClick={() => void loadNotifications(true)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Refresh</button><button type="button" onClick={() => void markAllNotificationsRead()} disabled={!unreadNotifications} className="text-xs font-semibold text-slate-500 hover:text-slate-800 disabled:opacity-40">Mark all read</button></div>
+                  </div>
+                  <div className="max-h-[min(65vh,420px)] overflow-y-auto">
+                    {notificationsLoading ? <p className="px-4 py-8 text-center text-sm text-slate-500">Loading notifications…</p> : notificationsError ? <div className="p-4"><p className="text-sm font-semibold text-rose-700">Notifications unavailable</p><p className="mt-1 break-words text-xs text-rose-600">{notificationsError}</p><p className="mt-2 text-xs text-slate-500">Run the notification-table SQL setup provided with this update.</p></div> : notifications.length === 0 ? <div className="px-4 py-9 text-center"><div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500"><Icon name="bell" /></div><p className="text-sm font-semibold text-slate-800">You’re all caught up</p><p className="mt-1 text-xs text-slate-500">New booking and enquiry alerts will appear here.</p></div> : notifications.map((notification) => <button key={notification.id} type="button" onClick={() => { void markNotificationRead(notification.id); setNotificationsOpen(false); if (notification.href) router.push(notification.href); }} className={`block w-full border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50 ${notification.is_read ? "bg-white" : "bg-emerald-50/60"}`}><div className="flex items-start gap-3"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.is_read ? "bg-slate-200" : "bg-emerald-600"}`} /><span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-slate-900">{notification.title}</span><span className="mt-1 block text-xs leading-5 text-slate-600">{notification.message}</span><span className="mt-1.5 block text-[10px] text-slate-400">{Number.isNaN(new Date(notification.created_at).getTime()) ? "Just now" : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(notification.created_at))}</span></span></div></button>)}
+                  </div>
+                  <div className="border-t border-slate-100 p-3"><button type="button" onClick={() => { setNotificationsOpen(false); router.push("/admin/bookings"); }} className="w-full rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Open bookings</button></div>
+                </div>
+              )}
+            </div>
             <div className="hidden text-right sm:block">
-              <p className="text-xs font-bold text-slate-800">Administrator</p>
-              <p className="mt-1 text-[10px] text-slate-400">
-                Travel Operations
+              <p className="text-xs font-bold text-slate-800">{adminName}</p>
+              <p className="mt-1 max-w-[180px] truncate text-[10px] text-slate-400" title={adminEmail}>
+                {adminRole}
               </p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-xs font-extrabold text-emerald-800">
-              HA
+              {adminName.slice(0, 2).toUpperCase()}
             </div>
           </div>
         </header>
